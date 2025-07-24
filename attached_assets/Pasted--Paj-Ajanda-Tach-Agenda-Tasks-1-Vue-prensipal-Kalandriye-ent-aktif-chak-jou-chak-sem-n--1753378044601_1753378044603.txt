@@ -1,0 +1,488 @@
+🗓 Paj Ajanda & Tach (Agenda & Tasks)
+1. Vue prensipal
+Kalandriye entèaktif (chak jou, chak semèn, chak mwa)
+Timeline ak blòk tan (pomodoro, deep work, meeting)
+Drag & drop tach sou orè
+Tag tach pa: 📍lokasyon, 🎯 objektif, ⏱ durasyon, 🔥 priyorite
+
+2. Tach
+✅ Tach senp (kout, aksyon rapid)
+🧩 Tach konplèks (ki gen plizyè etap, oswa depann de lòt tach)
+🧠 Tach AI-sijere (ex: "prepare pou randevou demen", "ranpli dosye bank lan")
+🪄 Tach rekuran (chak jou / semèn / mwa)
+
+3. Entèlijans atifisyèl (AI)
+🔁 Auto-replanning: si ou rate yon tach, AI replanifye l otomatikman
+💡 Sijesyon entèlijan: AI ka rekòmande pi bon lè pou fè yon travay
+📬 Souvenans entèlijan: "Ou pa janm fè plan pou repo w...", "Mank follow-up ak kliyan sa"
+
+4. Link ak lòt paj
+📂 Link ak Pwojè: chak pwojè gen tach asiyen
+💵 Link ak Finans: “Peye fakti sa demen” parèt otomatik
+🧍 Link ak Relasyon sosyal: “Rappele w fè apèl ak…” / “Rete san nouvèl de…”
+
+5. Vue alternatifs
+🎯 Vue pa objektif: “Sa m dwe fè pou m avanse sou objektif sa?”
+💪 Vue motivasyon: ak quote, nivo pwodiktivite ou, ak refleksyon jounen an
+📊 Vue estatistik:
+
+% tach konplete
+tan pase pa kategori (pwojè, tèt ou, sosyal, administratif)
+balans lavi / travay
+
+6. Aksyon rapid
+✍️ Kreye tach oralman (“Remind me to call Dominique tomorrow”)
+📎 Atache fichye oswa nòt ak tach
+⏰ Set alèt oswa notifikasyon (sms, imel, push)
+ 
+
+🧩 Paj: Pwojè mwen
+🔷 1. Header / Quick Overview
+🔘 Total pwojè yo (active, fini, abandone)
+🔘 Stat progress jeneral (bar %, charts)
+🔘 Filtrage rapid: Aktif | An planifikasyon | Anret | Fini
+🔘 Bouton: + Nouvo pwojè
+
+📁 2. Lis Pwojè yo (ak kat oswa tab)
+Chak pwojè gen:
+📌 Non & Deskripsyon kout
+⏳ Eta: An planifikasyon | An devlopman | An kontwòl | Fini
+🕓 Deadline / Delè
+
+🧠 Kategori: Pèsonèl, Travay, Rev Konstriksyon, Rap, Biznis, elatriye.
+👥 Kò ekip / Moun enplike (avèk tag oswa avatar)
+📊 % Avansman
+🔖 Tags: Urgent, High Impact, Client, Solo, elatriye
+🔁 Dènye aktivite: dat & aksyon
+🧷 Bouton rapid: Edit, Track, Note, Link
+
+🧠 3. Fonksyonalite prensipal nan chak pwojè
+Apre w klike sou yon pwojè, ou antre nan yon workspace dedye:
+➤ A. enfo jeneral pwojè a
+Tit, deskripsyon long, objektif (mache / pèsonèl)
+Sitiyasyon jodi a
+Kisa siksè vle di?
+
+➤ B. Taks / Workflow
+🪢 Subtasks, dependencies
+⏰ Dat kòmansman ak dat limit
+⏳ Priorite (baryè koulè, drag & drop)
+✔️ Checkbox & automatisation
+
+➤ C. Dokiman & Piès Joint
+Ajoute: plan, foto, pdf, kont ak KPI
+Link ak Google Drive / Notion / Canva / Figma
+
+➤ D. Finasman / Bidjè (si sa aplikab)
+💵 Estimasyon total
+🧾 Depans jiska prezan
+
+📈 KPI sou ROI, cashflow, savings, fon
+
+➤ E. Zòn Kolaborasyon (si an ekip)
+Chat entegre oswa komment sou chak task
+Notifikasyon IA
+Antre objektif chak manm
+Wòl chak moun (Designer, Dev, Client, etc.)
+
+➤ F. Tracking & AI
+AI rezime pwogrè chak semèn
+AI rekòmande pwochen aksyon
+Sijesyon pou optimize workflow / delegasyon
+Tracking tan (manèl oswa otomatik)
+
+🧠 Fonksyonalite Avanse
+Fonksyonalite	Deskripsyon
+🔄 Duplicasyon pwojè	Kreye modèl pou pwojè ki sanble
+📆 Entegrasyon ak kalandriye	Google/Apple Calendar sync
+📎 Link ak lòt paj	Link ak Byen, Finans, Moun, Objektif
+🔍 Rechèch entelijan	Rechèch pa moun, tag, kontèks
+🎯 IA Assistant	Sijere estrikti pwojè, mete milestone otomatik
+🗃️ Achiv Pwojè	Pou pwojè ki fini oswa abandone
+
+🌟 Ide pou kategori pwojè
+Travay / Kliyan
+Konstriksyon / Imobilye
+Kontni / Rezo Sosyal
+Woutin / Devlopman Pèsonèl
+Mizik / Atistik
+Aksyon Legal / Administratif
+Vwayaj / Lojistik
+Startup / SaaS / MVP
+Finans / Objektif Ekonomi
+
+Pwojè ou poko deside sou yo men ou mete kòm lide oubyen opòtinite
+Ou ka mete tags tankou #ide, #swadizan, #potansyèl
+pwoje ke ia pwopoze m 
+
+👨‍💻 Fonksyonalite 
+✅ Kanban View (To Do / In Progress / Done)
+🔁 Notifikasyon (pou tach ki apwoche)
+
+📊 Dashboard estatistik: Konbyen pwojè, konbyen an pwogrè, konbyen fini
+📤 Export pou pataje è (PDF, CSV)
+🔐 Sekirite oswa "Private" mode pou pwojè sansib
+
+
+🧾 Paj: Sa mwen posede (Asset Manager)
+🔹 1. Apèsi jeneral (Dashboard)
+Valè total byen ou (evalyasyon otomatik + manyèl)
+Chanjman resan (achte, vann, deplasman)
+Alèt renouvèlman (asirans, lisans, antretyen, elatriye)
+IA Summary: Rezime entèlijan sou sa ki pèdi valè, sa ki ka revann, oswa sa pou optimize
+
+🔹 2. Kategori de byen yo
+Ou kapab ajoute, modifye oswa filtre byen ou yo pa kategori sa yo:
+🏠 Byen imobilye
+Kay, tè, lokal komèsyal
+Detay: adrès, valè, papye legal, asirans, elatriye
+Fonksyonalite IA: evalyasyon aktyèl sou mache a
+💻 Teknoloji & Ekipman
+Laptop, telefòn, kamera, dron, tablèt, elatriye
+Detay: mak, modèl, dat achte, garanti
+IA ka suiv garanti, sijere lè pou ranplase oswa mete ajou
+👕 Rad & Pwodwi Pèsonèl
+Rad chè oswa rad w ap swete mete nan "Style Capsule"
+Aksèwa: mont, linèt, chèn, elatriye
+Fonksyonalite IA: Sijesyon teni (look suggestion) ak estil chak semèn
+🚘 Machin & Transpò
+Machin pèsonèl/profesyonèl, motosiklèt, bisiklèt
+Antretyen, lisans, asirans, valè sou mache
+IA Tracking: pwograme antretyen otomatik, evalyasyon resèl
+
+🧰 Zouti Pwofesyonèl
+Zouti konstriksyon, ekipman mizik, aparèy teknik
+Lokalizasyon, mòd itilizasyon, plan antretyen
+🖼️ Atizay, Koleksyon & Pwopriyete valab
+Tablo, liv raman, bijou, kado espesyal
+IA: Idantifikasyon otomatik ak evalyasyon estimatif
+📁 Dosye & Lisans yo
+Paspò, lisans, papye pwopriyete, asirans
+Soti legal, sove sou cloud / offline ak alèt ekspirasyon
+IA: Notifye ekspirasyon, ranpli otomatik fòm nouvo si sa posib
+
+🔹 3. Fonksyonalite Entèlijan (IA)
+🔎 Smart search: chèche nenpòt byen rapidman ak mo kle
+🧠 Insight AI: analiz chak mwa sou byen ou yo
+🔁 Suggestions IA: ki sa pou ou revann, mete ajou, oswa optimize
+📤 Rapò PDF otomatik: Jenerasyon fich byen ak valè total
+
+🔹 4. Aksyon rapid
+Ajoute nouvo byen
+📤 Ekspòte lis (PDF/Excel)
+📸 Upload foto/dokiman byen yo
+🔁 Antre transfè/vant
+🔔 Mete alèt sou chak byen
+
+🔹 5. Sekirite & Backup
+Backup cloud & lokal
+Verifikasyon de-faktè (2FA)
+Otorizasyon aksè: sèlman ou oswa lòt moun ou mete kòm "vizitè otorize"
+
+
+paj relasyon ak koneksyon 
+🧑‍🤝‍🧑 "Relasyon & Koneksyon"
+Yon paj oswa seksyon ki ede w jere, sonje, epi nourri relasyon w — pèsonèl oswa pwofesyonèl.
+
+🧱 Strikti prensipal paj la
+Chak moun genyen yon fich:
+👤 Non & foto
+🎯 Wòl / Relasyon: Fanmi, Zanmi, Madanm, Kòlèg, Kliyan, Crush, Koneksyon pwo
+📱 Kontak: Nimewo, IG, TikTok, Email, kote li sòti
+🧠 Ti detay pèsonèl:
+Anivèsè
+Sa yo renmen / pa renmen
+Dènye fwa nou pale / wè
+Mo ou itilize pou sonje yo (egzanp: "Li toujou ri fò")
+❤️ Nivo relasyon: Pre, Elwanye, Sispann pale, Swiv de lwen
+🧠 Fonksyonalite Entelijan Ou Mete
+
+1. 🔔 Rapèl pou pa bliye moun yo
+"Ou pa pale ak Junior depi 3 mwa. Voye yon mesaj rapid?"
+"Jodia se anivèsè Fafa."
+2. 📝 Nòt oswa Interactions
+Ou ka ekri sa ou pale, sa ou sonje:
+“Nou te pale sou plan l pou emigre. Li pa konn si li vle ret Ayiti.”
+3. 💡 Tag / kategori moun yo
+mennaj
+Fanmi
+Zanmi lavi
+Zanmi sou rezo
+Kolaboratè
+Fanm ou te frekante
+Moun ou rankontre men pa fin pwòch
+
+4. 📅 Entèraksyon ou planifye
+Voye mesaj chak 2 semèn
+Kreye okazyon pou wè yo
+Pwojè ou ta ka fè ak yo (ex: “Yon ti freestyle ak Junior”)
+
+🌐 Fonksyonalite Avanse (Avèk AI)
+1. 🤖 AI ki sonje ak raple w
+“Dènye fwa ou te wè Vanessa, ou te pale sou vin mete podcast ansanm – ou vle relanse lide sa?”
+
+2. ✍️ AI ede w ekri mesaj frapan
+"Voye mesaj pou fanm sa san l pa santi ou prese"
+"Ekri on caption pwofond pou zanmi ou ki fenk pèdi manman l"
+
+3. 📈 Radar relasyon ou
+Yon seksyon ki montre:
+Ki moun ou pale ak souvan
+Ki moun ki sou wout bliye
+Ki relasyon ki toxic / pa nourisan
+
+📊 Dashboard ou ka wè sou paj la
+
+
+💰 "Finans Mwen"
+Yon paj pou jere, planifye, ak analize tout sa ki antre ak sòti nan lajan ou.
+
+🧱 Strikti Paj Finans lan
+1. 📥 Antre lajan (Revenus / Inflows)
+Salè oswa pwofi
+Pwojè / kontra
+Vant atik (machin, laptop, mizik...)
+Kado / remèt
+Lotri, okazyonèl, elatriye
+✅ Ou mete: dat | sous | kantite | nòt | si li repete
+
+2. 📤 Depans (Dépenses / Outflows)
+Lojman (lokasyon, kouran, dlo)
+Manje / Pwovizyon
+Transpò (machin, gaz, Uber…)
+Elektronik / Shopping
+Fanm (😏 ou konnen), fanmi, kado
+Peman prè / dèt
+Abònman (Netflix, Replit, Canva…)
+
+✅ Ou mete: dat | kategori | kantite | mwayen (kat, kach) | nòt
+
+3. 💼 Bilan / Portfolio finans ou
+Konbyen ou genyen nan:
+Kont bank
+Kach
+Biznis
+Kriptografik / envestisman
+Byen ou ta ka vann (Laptop, machin, elatriye)
+
+✅ Gen graf pou monte valè ou total
+
+4. 🎯 Bidjè & Objektif
+Objektif lajan chak mwa (egzanp: Depanse < $500)
+Ekonomi pou:
+Laptop nouvo
+Vwayaj
+Pwojè
+Emergency Fund
+AI oswa kalkil otomatik montre:
+“Ou depanse 82% bidjè ou pou manje deja, li toujou 12 jou nan mwa a.”
+
+5. 📊 Rapò & Analiz Entelijan
+Top 5 depans
+Mwa sa vs mwa pase
+Kantite ou mete sou kote
+Twa dènye mwa: ou te depanse plis nan “transpò”
+Rapò PDF oswa graf otomatik
+
+6. 🧠 AI entegre pou konsèy
+“Si w kontinye depanse konsa, ou pap ka achte laptop ou an oktòb”
+“Ou depanse $70 pou fanm mwa sa. Vle mete limit?”
+“Vle mete $300 sou kote pou vwayaj la an Desanm?”
+
+7. 🛎️ Notifikasyon & Rappel
+Rappel pou peye bòdwo
+Rappel pou mete ekonomi chak 1er
+Alert depasman bidjè
+
+🌐 Entegre ak lòt seksyon yo
+Si w mete acha nan paj “Byen mwen” → otomatikman parèt kòm depans
+Lajan ou bay zanmi → konekte ak “Relasyon & Koneksyon”
+Biznis ou → konekte ak “Pwojè Travay / Antrepriz”
+
+Ou kapab itilize l pou:
+Kenbe disiplin
+Jere depans fanmi ou
+Fè plan pwojè san al nan dezòd
+Wè ki sa k "souse" lajan w pi souvan
+Fè kalkil si ou vle envesti
+
+📝 Paj “Nòt” / Notes Center
+✅ Fonksyonalite prensipal:
+Ajoute Nòt Rapid
+Bouton "Nouvo Nòt" (Quick note)
+
+Ajoute nòt ak tèm oswa tit
+Markdown oswa rich text (anba, italik, biltin, elatriye)
+Klasifikasyon Otomatik oswa Manyèl
+
+Kategori: Pèsonèl, Travay, Ide Biznis, Refleksyon Espirityèl, Rap Lyric, List, elatriye.
+Ou ka mete tag (#ide, #important, #urgent, #paresse, #pwojè)
+Filtrage ak Rechèch Avanse
+Rechèch pa mo kle
+Filtre pa tag / kategori / dat / orijin (paj ou te pran l ladan l)
+Nòt Relasyonèl / Entelijan
+Ou ka mete nòt an rapò ak yon pwojè, moun, tach, oswa byen ou deja genyen
+Egzanp: yon nòt ki lye ak zanmi w Youri, oswa ak plan planifikasyon kay la
+
+Nòt ak Asistan Entèlijan
+AI kapab:
+Rezime long nòt pou ou
+Sijere tag ak kategori otomatik
+Kreye tach oswa rapèl soti nan sa w ekri
+
+Soti nan fraz ou ekri a, konvètil an lide oswa estrikti pou pwojè
+Mode Sekrè / Konfidansyèl
+Ou ka mete nòt prive ou sèlman ou wè (anplis de backup / ankriptaj)
+Ajoute Fichye oswa Audio
+Mete imaj, fichye, oswa anrejistreman vokal anndan nòt yo
+
+(Egzanp: Foto yon ide design, oswa vwa ou k ap pale sou yon lide)
+Tach entegre
+Mete checklists oswa mini-tach dirèkteman anndan nòt yo
+
+🔍 Exemple Layout (Senp & Pwisan)
+yaml
+Copy
+Edit
+╔════════════════════════════════════════╗
+║       [ + Nouvo Nòt ]   🔍🔽Tag Filter   ║
+╚════════════════════════════════════════╝
+
+📒 Tit: Ide pou nouvo kontni rap 🎤
+🗂️ Kategori: Kreativite, Rap
+🏷️ Tags: #lyrics #ide #freestyle
+📎 Lyen: Pwojè "Mixtape 2025"
+
+✏️ "M t ap panse a 'tout m te vle, se pa sa m resevwa' kòm hook
+Pou couple la m ka jwe ak metafò sou lavil ak dezilizyon…"
+
+[🔁 Sijere Hook ak Rim ✨]
+[📌 Konvèti an Tach pou Refleksyon pi ta]
+
+───────────────────────────────
+
+📒 Tit: Nòt Sou Kont GMS 🚗
+🗂️ Kategori: Finans Travay
+🏷️ #GMS #lokasyon #swiv
+📎 Lyen: Paj Finans > Sub "Revni GMS"
+
+✏️ "Verifikasyon sou rent fèk fini, gen 3 machin ki poko peye jiska 15 jiyè..."
+
+[📊 Konvèti an rapò]
+[🔔 Mete rapèl pou 19 jiyè]
+
+🔄 Entègrasyon ak lòt paj yo
+Lyen ak:
+Pwojè yo (li mete otomatikman nòt ou ekri pandan ou sou pwojè a
+Tach yo (nòt kapab vin tach)
+Relasyon Sosyal (nòt sou yon konvèsasyon, rankont, elatriye)
+Ajanda (nòt ou pran pandan yon reyinyon)
+Finans (nòt ki vin detaye sou depans, planifikasyon elatriye)
+
+
+🧾 Paj: Rapo (Reports)
+Objektif: Fè ou wè analiz sou lavi w ak aktivite w (materyèl, finans, relasyon, pwojè, objektif...) pou ka pran bon desizyon vit.
+
+🔹 Seksyon Prensipal yo:
+1. 📊 Rapo Jeneral / Panoramik
+Total byen ou yo ak estimasyon valè yo
+Total pwojè w ap mennen, avansman %
+Finans: Revni, depans, balans
+Tach konplete / rete
+Pwen cho (eg: depans ki ap ogmante, pwojè an reta, elatriye)
+
+2. 🏷️ Rapo pa Kategori
+Chak kategori gen yon sub-page oswa filtre:
+Byen pèsonèl: Detay sou valè + chanjman resan (eg. laptop ou gen 2 ane, pwopozisyon pou vann li)
+Finans:
+Rapo sou revni & depans chak mwa
+Kategori depans prensipal
+Analiz IA: "Ou depanse 22% plis nan manje pase mwa pase"
+Pwojè: Progresyon, delè, bwat mouri
+Relasyon:
+Ki moun ou pi souvan kominike ak
+Kontak ou pa bay atansyon ankò
+Tach / Ajanda: Estatistik sou konpòtman ou (eg. % tach ou ranpli a tan)
+
+3. 🧠 Rekòmandasyon IA (AI Insights)
+"Vann laptop sa si w pa sèvi avè l ankò. Valè li ap desann"
+"Rete kole ak X: relasyon sa bay ou plis enèji pozitif"
+"Ou gen 4 pwojè an reta, èske nou fè replanifikasyon?"
+"Ou dpanse plis pase sa ou touche depi 2 mwa"
+
+4. 📅 Rapo pa Peryòd
+Mwa sa
+Semèn sa
+Trimestriyèl
+Anyèl
+Avèk bouton “Konpare ak peryòd avan”
+
+5. 📁 Rapo Exportable
+PDF / Excel / Notion / E-mail
+"Voye rapo a bay kontab / mentor / coach ou"
+
+🔧 Fonksyonalite Entelijan yo:
+AI assistant pou mete rapò sou fòm tèks otomatik ("Mwa sa, ou te...")
+Graf entèaktif ak filtre
+Trigger alèt: "Si depans > 50% revni = Notify"
+Bookmark rapò ou vle swiv chak semèn
+Mode Privé si ou vle kenbe kèk seksyon prive
+
+🔄 Entèkonèksyon ak lòt paj:
+Trase soti done ki soti nan:
+
+Ajanda / Tach
+Byen / Finans
+Pwojè / Relasyon
+Nòt ak refleksyon
+
+
+🌐 Paj: Chatbot Asistan (IA Entelijan)
+📌 Wòl li: Gid pèsonèl ou — li kapab reponn, kreye, sonje, raple, modifye, ajiste, e menm vin jwenn ou ak sijesyon san ou mande.
+🔗 Aksè li genyen sou tout paj yo:
+Li ka li, modifye, mete ajou oswa kreye done sou:
+
+✅ Dashboard prensipal: li ka mete ou ajou, chanje mood ou, modifye plan jounen ou, mete rapèl
+✅ Relasyon Sosyal: li ka raple w rele fanmi, fè mesaj pou ou, mete not sou relasyon ki frèt
+✅ Finans: li ka mete depans, raple w bòdwo, fè ti analiz sou depans ou
+✅ Sa ou posede: li ka mete nouvo acha, fè rapèl sou bagay ki bezwen antretyen
+✅ Pwojè: li ka mete nouvo pwojè, voye w rapèl, mande ou validasyon sou etap ki fèt
+✅ Ajanda & Tâches: li ka mete, modifye, raple, oswa deklanche tach pou ou
+✅ Nòt: li ka pran nòt pou ou nenpòt kilè, mete yo nan kategori, fè ti rezime
+✅ Rapò: li ka ekri rapò otomatik chak semèn, chak mwa, chak pwojè, oubyen sou demann
+
+🧠 Fonksyonalite prensipal yo:
+1. 🗣️ Chat Konvèsasyonèl Natif:
+Ou pale avè l natirèlman:
+
+“Choute m demen 6 a.m., mete beny lan nan woutin, epi raple m fè randevou ak notè a.”
+Li reponn, li egzekite, epi l mete li kote ki dwe ye.
+
+2. 🔁 Sistèm Rapèl Avanse ak Notifikasyon Otomatik:
+Li verifye tout bagay:
+Si ou pa konfime ou fè yon tach → li raple w
+Si ou te gen pou poste sou sit ou, li ka voye w notifikasyon
+Si ou bliye pran on nòt, li ka ekri:
+"Ou pa mete nòt sou randevou ak Youri a. Vle mwen ekri sa ou sonje?"
+
+3. 📅 Sijesyon Entelijan sou Ajanda ou:
+Si ou gen espas → li pwopoze:
+"Ou gen 1h lib. Vle w travay sou pwojè 'Kay Kanapevè' oswa rele Flore-Anne?"
+
+4. 📝 Kreyasyon Nòt oswa Kontni Otomatik:
+Ou ka di l:
+“Ekri sa Youri te di m sou plan lopital la nan seksyon nòt pwojè a.”
+Li mete li kote li dwe ye.
+
+5. 📢 Entèvansyon Espontane:
+Si li remake ou inyore tach ou, li ka ekri w li-menm:
+"Bro, ou pa t konfime okenn aksyon depi yè. Vle mwen mete ajanda a ajou?"
+
+6. 📊 Analiz & Rapo Otomatik:
+"Men rapò ou sou tan ou pase sou relasyon/fòmasyon/projè semèn sa."
+
+7. 🎭 Chanjman Mood & Atitid:
+Ou ka di l:
+
+“M santi m pa twò motivasyon jodi a.”
+Li ka adapte notifikasyon, evite chaje w, mete tach ki pi limyè.
