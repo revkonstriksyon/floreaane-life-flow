@@ -665,15 +665,15 @@ export default function Assets() {
       setNewAsset({
         name: "",
         category: "",
-        description: "",
-        purchase_price: null,
-        current_value: null,
+        purchase_price: 0,
+        current_value: 0,
         purchase_date: "",
+        location: "",
+        description: "",
         warranty_end_date: "",
         insurance_expiry_date: "",
-        location: "",
-        condition: "good",
-        maintenance_schedule: ""
+        serial_number: "",
+        notes: ""
       });
       setIsAddDialogOpen(false);
     } catch (error) {
@@ -851,8 +851,9 @@ export default function Assets() {
                   <div>
                     <Label htmlFor="value">Valè estimatif ($)</Label>
                     <Input
-                      id="value"```text
-      type="number"
+```text
+                      id="value"
+                      type="number"
                       value={newAsset.estimated_value}
                       onChange={(e) => setNewAsset({...newAsset, estimated_value: parseFloat(e.target.value) || 0})}
                       placeholder="1500"

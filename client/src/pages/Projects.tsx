@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { AIInsights } from "@/components/ai/AIInsights";
+import { AIChat } from "@/components/ai/AIChat";
 import { 
   FolderOpen, 
   Plus, 
@@ -421,6 +423,15 @@ export default function Projects() {
           </Card>
         </div>
 
+        {/* AI Insights */}
+        <div className="p-6 pb-0">
+          <AIInsights 
+            data={projects} 
+            type="projects" 
+            title="Konsey AI pou Pwojè yo"
+          />
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="grid" className="w-full">
@@ -661,6 +672,17 @@ export default function Projects() {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Mwen gen ${projects.length} pwojè total, ${projects.filter(p => p.status === 'active').length} aktif.`}
+        suggestions={[
+          "Ki pwojè ki bezwen pi plis atansyon?",
+          "Ki jan pou jere delè pwojè yo?",
+          "Bay konsey pou amelyore jesyon pwojè",
+          "Ki priyorite pou semèn nan?"
+        ]}
+      />
     </div>
   );
 }

@@ -30,6 +30,8 @@ import {
   Pause
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AIInsights } from "@/components/ai/AIInsights";
+import { AIChat } from "@/components/ai/AIChat";
 
 interface Task {
   id: string;
@@ -516,6 +518,15 @@ if (isLoading) {
           </Card>
         </div>
 
+        {/* AI Insights */}
+        <div className="p-6 pb-0">
+          <AIInsights 
+            data={tasks} 
+            type="tasks" 
+            title="Konsey AI pou Tach yo"
+          />
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="today" className="w-full">
@@ -782,6 +793,17 @@ if (isLoading) {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Mwen gen ${tasks.length} tach total, ${todayTasks.length} pou jou a, ${completedToday} fini deja.`}
+        suggestions={[
+          "Ki tach ki pi ijan pou jou a?",
+          "Ki jan pou òganize tan mwen pi byen?",
+          "Bay m konsey pou fini tout tach yo",
+          "Ki jan pou jere tach ki an reta yo?"
+        ]}
+      />
     </div>
   );
 }
