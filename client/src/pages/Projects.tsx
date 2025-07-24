@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   FolderOpen, 
   Plus, 
@@ -32,214 +33,200 @@ import {
   Lightbulb
 } from "lucide-react";
 
-const mockProjects = [
-  {
-    id: 1,
-    name: "Kay Kanapevè - Renovasyon",
-    shortDescription: "Renovasyon konplè kay lan ak nouvo konsèp modèn",
-    status: "in_progress",
-    category: "construction",
-    progress: 65,
-    deadline: "2024-03-15",
-    budget: 45000,
-    spent: 28000,
-    team: 4,
-    priority: "high",
-    tags: ["urgent", "construction", "client"],
-    lastActivity: "2024-01-15",
-    isPrivate: false
-  },
-  {
-    id: 2,
-    name: "Mixtape 2025 - Pwodwi",
-    shortDescription: "Nouvo mixtape ak 12 pis orijinal",
-    status: "planning",
-    category: "music",
-    progress: 25,
-    deadline: "2024-06-01",
-    budget: 8000,
-    spent: 1200,
-    team: 3,
-    priority: "medium",
-    tags: ["creative", "music", "personal"],
-    lastActivity: "2024-01-12",
-    isPrivate: false
-  },
-  {
-    id: 3,
-    name: "Aplikasyon FLOREAANE",
-    shortDescription: "SaaS pèsonèl pou jesyon lavi ak pwodiktivite",
-    status: "active",
-    category: "tech",
-    progress: 80,
-    deadline: "2024-02-28",
-    budget: 0,
-    spent: 0,
-    team: 1,
-    priority: "high",
-    tags: ["startup", "saas", "personal"],
-    lastActivity: "2024-01-16",
-    isPrivate: false
-  }
-];
+interface Project {
+  id: string;
+  name: string;
+  short_description: string | null;
+  long_description: string | null;
+  status: string | null;
+  category: string | null;
+  progress_percentage: number | null;
+  deadline: string | null;
+  estimated_budget: number | null;
+  actual_cost: number | null;
+  start_date: string | null;
+  tags: string[] | null;
+  is_private: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+  user_id: string;
+}
 
-const categoryIcons = {
-  construction: Home,
-  music: Music,
-  tech: Briefcase,
-  personal: Target,
-  business: DollarSign,
+const statusColors: Record<string, string> = {
+  planning: "bg-blue-100 text-blue-800",
+  active: "bg-green-100 text-green-800", 
+  in_progress: "bg-yellow-100 text-yellow-800",
+  on_hold: "bg-orange-100 text-orange-800",
+  completed: "bg-emerald-100 text-emerald-800",
+  cancelled: "bg-red-100 text-red-800"
+};
+
+const statusLabels: Record<string, string> = {
+  planning: "Planifikasyon",
+  active: "Aktif",
+  in_progress: "Nan Travay",
+  on_hold: "Rete",
+  completed: "Fini",
+  cancelled: "Anile"
+};
+
+const categoryIcons: Record<string, any> = {
+  personal: Home,
+  work: Briefcase,
   creative: Palette,
-  legal: Gavel,
+  health: Target,
+  education: Lightbulb,
   travel: Plane,
-  idea: Lightbulb
+  legal: Gavel,
+  entertainment: Music
 };
 
-const statusColors = {
-  planning: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  active: "bg-green-500/10 text-green-500 border-green-500/20",
-  in_progress: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-  on_hold: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-  completed: "bg-success/10 text-success border-success/20",
-  cancelled: "bg-destructive/10 text-destructive border-destructive/20"
-};
-
-const priorityColors = {
-  low: "bg-gray-500/10 text-gray-500",
-  medium: "bg-warning/10 text-warning",
-  high: "bg-destructive/10 text-destructive"
+const categoryNames: Record<string, string> = {
+  personal: "Pèsonèl",
+  work: "Travay",
+  creative: "Kreyatif", 
+  health: "Sante",
+  education: "Edikasyon",
+  travel: "Vwayaj",
+  legal: "Legal",
+  entertainment: "Amizman"
 };
 
 export default function Projects() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeView, setActiveView] = useState("grid");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const filteredProjects = mockProjects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.shortDescription.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || project.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
-  const totalProjects = mockProjects.length;
-  const activeProjects = mockProjects.filter(p => p.status === "active" || p.status === "in_progress").length;
-  const completedProjects = mockProjects.filter(p => p.status === "completed").length;
-  const totalBudget = mockProjects.reduce((sum, p) => sum + p.budget, 0);
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ht-HT', {
-      style: 'currency',
-      currency: 'HTG'
-    }).format(amount);
+      if (error) {
+        console.error('Error fetching projects:', error);
+        return;
+      }
+
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ht-HT');
-  };
+  const filteredProjects = projects.filter(project =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.short_description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const getCategoryIcon = (category: string) => {
-    const IconComponent = categoryIcons[category as keyof typeof categoryIcons] || FolderOpen;
-    return IconComponent;
-  };
+  const completedProjects = projects.filter(p => p.status === 'completed').length;
+  const activeProjects = projects.filter(p => p.status === 'active' || p.status === 'in_progress').length;
+  const totalBudget = projects.reduce((sum, p) => sum + (p.estimated_budget || 0), 0);
+  const totalSpent = projects.reduce((sum, p) => sum + (p.actual_cost || 0), 0);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            <p className="mt-4">Ap chèche pwojè yo...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        currentPath="/projects"
-      />
-      
+      <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
+        <div className="p-6 border-b">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Pwojè Mwen
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Jere ak swiv tout pwojè ou yo nan yon sèl plas
-              </p>
+              <h1 className="text-3xl font-bold">Jesyon Pwojè</h1>
+              <p className="text-muted-foreground">Planifye ak sivèy pwojè ou yo</p>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechèch pwojè..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtre
-              </Button>
-              <Button size="sm" className="bg-gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvo Pwojè
-              </Button>
-            </div>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvo Pwojè
+            </Button>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
-            <Card className="bg-card/50">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Chèche pwojè yo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtre
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
               <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <FolderOpen className="h-5 w-5 text-primary" />
-                  </div>
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">{totalProjects}</p>
                     <p className="text-sm text-muted-foreground">Total Pwojè</p>
+                    <p className="text-2xl font-bold">{projects.length}</p>
                   </div>
+                  <FolderOpen className="h-8 w-8 text-primary" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50">
+            <Card>
               <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-success/10 rounded-lg">
-                    <BarChart3 className="h-5 w-5 text-success" />
-                  </div>
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">{activeProjects}</p>
                     <p className="text-sm text-muted-foreground">Aktif</p>
+                    <p className="text-2xl font-bold">{activeProjects}</p>
                   </div>
+                  <Target className="h-8 w-8 text-green-500" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50">
+            <Card>
               <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-warning/10 rounded-lg">
-                    <Target className="h-5 w-5 text-warning" />
-                  </div>
+                <div className="flex items-center justify-between">
                   <div>
+                    <p className="text-sm text-muted-foreground">Fini</p>
                     <p className="text-2xl font-bold">{completedProjects}</p>
-                    <p className="text-sm text-muted-foreground">Konplete</p>
                   </div>
+                  <Archive className="h-8 w-8 text-blue-500" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50">
+            <Card>
               <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-accent/10 rounded-lg">
-                    <DollarSign className="h-5 w-5 text-accent" />
-                  </div>
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">{formatCurrency(totalBudget)}</p>
-                    <p className="text-sm text-muted-foreground">Total Bidjè</p>
+                    <p className="text-sm text-muted-foreground">Bidjè Total</p>
+                    <p className="text-2xl font-bold">${totalBudget.toLocaleString()}</p>
                   </div>
+                  <DollarSign className="h-8 w-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>
@@ -247,270 +234,136 @@ export default function Projects() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={activeView} onValueChange={setActiveView} className="h-full flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex-1 overflow-y-auto p-6">
+          <Tabs defaultValue="grid" className="w-full">
+            <div className="flex items-center justify-between mb-6">
               <TabsList>
-                <TabsTrigger value="grid" className="gap-2">
-                  <Grid3X3 className="h-4 w-4" />
-                  Grid
-                </TabsTrigger>
-                <TabsTrigger value="list" className="gap-2">
-                  <List className="h-4 w-4" />
-                  List
-                </TabsTrigger>
-                <TabsTrigger value="kanban" className="gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  Kanban
-                </TabsTrigger>
+                <TabsTrigger value="grid">Grid</TabsTrigger>
+                <TabsTrigger value="list">Lis</TabsTrigger>
+                <TabsTrigger value="kanban">Kanban</TabsTrigger>
               </TabsList>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={filterStatus === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterStatus("all")}
-                >
-                  Tout
-                </Button>
-                <Button
-                  variant={filterStatus === "active" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterStatus("active")}
-                >
-                  Aktif
-                </Button>
-                <Button
-                  variant={filterStatus === "completed" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterStatus("completed")}
-                >
-                  Konplete
-                </Button>
-              </div>
             </div>
 
-            <div className="flex-1 px-6 pb-6 overflow-auto">
-              <TabsContent value="grid" className="mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProjects.map((project) => {
-                    const CategoryIcon = getCategoryIcon(project.category);
-                    return (
-                      <Card key={project.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-primary/10 rounded-lg">
-                                <CategoryIcon className="h-5 w-5 text-primary" />
-                              </div>
-                              <div className="flex-1">
-                                <CardTitle className="text-lg leading-tight">
-                                  {project.name}
-                                </CardTitle>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {project.shortDescription}
-                                </p>
-                              </div>
+            <TabsContent value="grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => {
+                  const IconComponent = categoryIcons[project.category || 'personal'] || Home;
+
+                  return (
+                    <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <IconComponent className="h-6 w-6 text-primary" />
                             </div>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
+                            <div>
+                              <CardTitle className="text-lg">{project.name}</CardTitle>
+                              <Badge variant="secondary" className={statusColors[project.status || 'planning']}>
+                                {statusLabels[project.status || 'planning']}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
                             </Button>
                           </div>
-                        </CardHeader>
-
-                        <CardContent className="space-y-4">
-                          {/* Progress */}
-                          <div>
-                            <div className="flex items-center justify-between text-sm mb-2">
-                              <span className="text-muted-foreground">Pwogrè</span>
-                              <span className="font-medium">{project.progress}%</span>
-                            </div>
-                            <Progress value={project.progress} className="h-2" />
-                          </div>
-
-                          {/* Status & Priority */}
-                          <div className="flex items-center gap-2">
-                            <Badge className={statusColors[project.status as keyof typeof statusColors]}>
-                              {project.status}
-                            </Badge>
-                            <Badge className={priorityColors[project.priority as keyof typeof priorityColors]}>
-                              {project.priority}
-                            </Badge>
-                          </div>
-
-                          {/* Tags */}
-                          <div className="flex flex-wrap gap-1">
-                            {project.tags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-
-                          {/* Details */}
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">
-                                {formatDate(project.deadline)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">
-                                {project.team} manm
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Budget */}
-                          {project.budget > 0 && (
-                            <div className="text-sm">
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Bidjè</span>
-                                <span className="font-medium">
-                                  {formatCurrency(project.spent)} / {formatCurrency(project.budget)}
-                                </span>
-                              </div>
-                              <Progress 
-                                value={(project.spent / project.budget) * 100} 
-                                className="h-1 mt-1" 
-                              />
-                            </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {project.short_description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {project.short_description}
+                            </p>
                           )}
 
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 pt-2">
-                            <Button variant="outline" size="sm" className="flex-1">
-                              <Eye className="h-4 w-4 mr-2" />
-                              Wè
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1">
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="list" className="mt-0">
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="divide-y divide-border/50">
-                      {filteredProjects.map((project) => {
-                        const CategoryIcon = getCategoryIcon(project.category);
-                        return (
-                          <div key={project.id} className="p-4 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className="p-2 bg-primary/10 rounded-lg">
-                                <CategoryIcon className="h-5 w-5 text-primary" />
-                              </div>
-                              
-                              <div className="flex-1">
-                                <h3 className="font-medium">{project.name}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {project.shortDescription}
-                                </p>
-                              </div>
-
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <p className="text-sm font-medium">{project.progress}%</p>
-                                  <Progress value={project.progress} className="w-20 h-2" />
-                                </div>
-                                
-                                <Badge className={statusColors[project.status as keyof typeof statusColors]}>
-                                  {project.status}
-                                </Badge>
-                                
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Calendar className="h-4 w-4" />
-                                  {formatDate(project.deadline)}
-                                </div>
-                                
-                                <Button variant="ghost" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Pwogrè</span>
+                              <span>{project.progress_percentage || 0}%</span>
                             </div>
+                            <Progress value={project.progress_percentage || 0} className="h-2" />
                           </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
-              <TabsContent value="kanban" className="mt-0">
-                <div className="grid grid-cols-4 gap-6">
-                  {["Planning", "An Kous", "Revizyon", "Konplete"].map((column) => (
-                    <Card key={column}>
-                      <CardHeader>
-                        <CardTitle className="text-center text-sm">{column}</CardTitle>
-                        <Badge variant="secondary" className="w-fit mx-auto">
-                          {filteredProjects.filter(p => {
-                            if (column === "Planning") return p.status === "planning";
-                            if (column === "An Kous") return p.status === "active" || p.status === "in_progress";
-                            if (column === "Revizyon") return p.status === "review";
-                            return p.status === "completed";
-                          }).length}
-                        </Badge>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {filteredProjects
-                          .filter(p => {
-                            if (column === "Planning") return p.status === "planning";
-                            if (column === "An Kous") return p.status === "active" || p.status === "in_progress";
-                            if (column === "Revizyon") return p.status === "review";
-                            return p.status === "completed";
-                          })
-                          .map((project) => {
-                            const CategoryIcon = getCategoryIcon(project.category);
-                            return (
-                              <div
-                                key={project.id}
-                                className="p-3 bg-card border border-border/50 rounded-md hover:shadow-sm transition-shadow cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2 mb-2">
-                                  <CategoryIcon className="h-4 w-4 text-primary" />
-                                  <h4 className="font-medium text-sm">{project.name}</h4>
-                                </div>
-                                
-                                <p className="text-xs text-muted-foreground mb-3">
-                                  {project.shortDescription}
-                                </p>
-                                
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-xs">
-                                    <span>Pwogrè</span>
-                                    <span>{project.progress}%</span>
-                                  </div>
-                                  <Progress value={project.progress} className="h-1" />
-                                </div>
-                                
-                                <div className="flex items-center gap-1 mt-3">
-                                  <Badge 
-                                    className={priorityColors[project.priority as keyof typeof priorityColors]}
-                                  >
-                                    {project.priority}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    {project.team}
-                                  </Badge>
-                                </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span>
+                                {project.deadline 
+                                  ? new Date(project.deadline).toLocaleDateString('fr-FR')
+                                  : 'Pa gen dèt'}
+                              </span>
+                            </div>
+                            {project.estimated_budget && (
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                <span>${project.estimated_budget.toLocaleString()}</span>
                               </div>
-                            );
-                          })}
+                            )}
+                          </div>
+
+                          {project.tags && project.tags.length > 0 && (
+                            <div className="flex gap-1 flex-wrap">
+                              {project.tags.slice(0, 3).map((tag, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {project.tags.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{project.tags.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="list">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Lis Pwojè</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {filteredProjects.map((project) => (
+                      <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-sm transition-shadow">
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <FolderOpen className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{project.name}</h3>
+                            <p className="text-sm text-muted-foreground">{project.short_description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant="secondary" className={statusColors[project.status || 'planning']}>
+                            {statusLabels[project.status || 'planning']}
+                          </Badge>
+                          <div className="text-sm text-muted-foreground">
+                            {project.progress_percentage || 0}%
+                          </div>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>

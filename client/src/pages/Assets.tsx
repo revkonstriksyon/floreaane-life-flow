@@ -1,10 +1,12 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
   Laptop, 
@@ -29,46 +31,33 @@ import {
   Trash2
 } from "lucide-react";
 
-const mockAssets = [
-  {
-    id: 1,
-    name: "MacBook Pro 2023",
-    category: "technology",
-    currentValue: 2500,
-    purchasePrice: 3000,
-    purchaseDate: "2023-01-15",
-    warrantyEndDate: "2024-01-15",
-    location: "Biwo",
-    description: "Laptop travay prensipal",
-    imageUrl: null
-  },
-  {
-    id: 2,
-    name: "Kay Petion-Ville",
-    category: "real_estate",
-    currentValue: 85000,
-    purchasePrice: 75000,
-    purchaseDate: "2022-06-01",
-    insuranceExpiryDate: "2024-06-01",
-    location: "Petion-Ville",
-    description: "Kay kote m rete",
-    imageUrl: null
-  },
-  {
-    id: 3,
-    name: "Machin Honda Civic",
-    category: "vehicles",
-    currentValue: 18000,
-    purchasePrice: 22000,
-    purchaseDate: "2021-03-10",
-    licenseExpiryDate: "2024-03-10",
-    location: "Garaj",
-    description: "Machin pèsonèl",
-    imageUrl: null
-  }
-];
+interface Asset {
+  id: string;
+  name: string;
+  category: string | null;
+  current_value: number | null;
+  purchase_price: number | null;
+  purchase_date: string | null;
+  warranty_end_date: string | null;
+  insurance_expiry_date: string | null;
+  license_expiry_date: string | null;
+  location: string | null;
+  description: string | null;
+  image_url: string | null;
+  user_id: string;
+}
 
-const categoryIcons = {
+const categoryNames: Record<string, string> = {
+  real_estate: "Kay ak Tè",
+  technology: "Teknoloji", 
+  clothing: "Rad",
+  vehicles: "Machin",
+  tools: "Zouti",
+  art: "Atis",
+  documents: "Dokiman"
+};
+
+const categoryIcons: Record<string, any> = {
   real_estate: Home,
   technology: Laptop,
   clothing: Shirt,
@@ -78,126 +67,165 @@ const categoryIcons = {
   documents: FileText
 };
 
-const categoryNames = {
-  real_estate: "Byen Imobilye",
-  technology: "Teknoloji",
-  clothing: "Rad ak Aksèwa",
-  vehicles: "Machin ak Transpò",
-  tools: "Zouti Pwofesyonèl",
-  art: "Atizay ak Koleksyon",
-  documents: "Dosye ak Lisans"
-};
-
 export default function Assets() {
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const filteredAssets = mockAssets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         asset.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || asset.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  useEffect(() => {
+    fetchAssets();
+  }, []);
 
-  const totalValue = mockAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
-  const totalInvestment = mockAssets.reduce((sum, asset) => sum + asset.purchasePrice, 0);
-  const valueChange = totalValue - totalInvestment;
+  const fetchAssets = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('assets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching assets:', error);
+        return;
+      }
+
+      setAssets(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredAssets = assets.filter(asset =>
+    asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    asset.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalValue = assets.reduce((sum, asset) => sum + (asset.current_value || 0), 0);
+  const totalPurchaseValue = assets.reduce((sum, asset) => sum + (asset.purchase_price || 0), 0);
+  const valueChange = totalValue - totalPurchaseValue;
+
+  const getPriorityColor = (dueDate: string | null) => {
+    if (!dueDate) return "bg-muted text-muted-foreground";
+    
+    const today = new Date();
+    const due = new Date(dueDate);
+    const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilDue < 30) return "bg-destructive/10 text-destructive border-destructive/20";
+    if (daysUntilDue < 90) return "bg-warning/10 text-warning border-warning/20";
+    return "bg-green-500/10 text-green-500 border-green-500/20";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            <p className="mt-4">Ap chèche byen yo...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        currentPath="/assets"
-      />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
+        <div className="p-6 border-b">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Sa Mwen Posede
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Jere ak swiv tout byen ou yo
-              </p>
+              <h1 className="text-3xl font-bold">Jesyon Byen</h1>
+              <p className="text-muted-foreground">Sivèy ak jeré tout byen ou yo</p>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechèch byen..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtre
-              </Button>
-              <Button size="sm" className="bg-gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvo Byen
-              </Button>
-            </div>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Ajoute Byen
+            </Button>
           </div>
-        </div>
 
-        {/* Stats Overview */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Valè Total</p>
-                  <p className="text-2xl font-bold">${totalValue.toLocaleString()}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Envestisman</p>
-                  <p className="text-2xl font-bold">${totalInvestment.toLocaleString()}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Chèche bien yo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtre
+            </Button>
+          </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Chanjman</p>
-                  <p className={`text-2xl font-bold ${valueChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString()}
-                  </p>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valè Total</p>
+                    <p className="text-2xl font-bold">${totalValue.toLocaleString()}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-primary" />
                 </div>
-                <TrendingUp className={`h-8 w-8 ${valueChange >= 0 ? 'text-green-500' : 'text-red-500'}`} />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Byen</p>
-                  <p className="text-2xl font-bold">{mockAssets.length}</p>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Chanjman</p>
+                    <p className={`text-2xl font-bold ${valueChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString()}
+                    </p>
+                  </div>
+                  <TrendingUp className={`h-8 w-8 ${valueChange >= 0 ? 'text-green-500' : 'text-red-500'}`} />
                 </div>
-                <Home className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Byen</p>
+                    <p className="text-2xl font-bold">{assets.length}</p>
+                  </div>
+                  <Home className="h-8 w-8 text-purple-500" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Alèt</p>
+                    <p className="text-2xl font-bold">
+                      {assets.filter(asset => {
+                        const today = new Date();
+                        return (asset.warranty_end_date && new Date(asset.warranty_end_date) < new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)) ||
+                               (asset.insurance_expiry_date && new Date(asset.insurance_expiry_date) < new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)) ||
+                               (asset.license_expiry_date && new Date(asset.license_expiry_date) < new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000));
+                      }).length}
+                    </p>
+                  </div>
+                  <AlertTriangle className="h-8 w-8 text-orange-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -225,114 +253,63 @@ export default function Assets() {
             <TabsContent value="grid">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAssets.map((asset) => {
-                  const IconComponent = categoryIcons[asset.category as keyof typeof categoryIcons] || Home;
-                  const valueChange = asset.currentValue - asset.purchasePrice;
+                  const IconComponent = categoryIcons[asset.category || 'documents'] || FileText;
                   
                   return (
-                    <Card key={asset.id} className="hover:shadow-md transition-shadow">
+                    <Card key={asset.id} className="hover:shadow-lg transition-shadow">
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-primary/10 rounded-lg">
-                              <IconComponent className="h-5 w-5 text-primary" />
+                              <IconComponent className="h-6 w-6 text-primary" />
                             </div>
                             <div>
                               <CardTitle className="text-lg">{asset.name}</CardTitle>
-                              <Badge variant="outline" className="text-xs">
-                                {categoryNames[asset.category as keyof typeof categoryNames]}
-                              </Badge>
+                              <p className="text-sm text-muted-foreground">
+                                {categoryNames[asset.category || 'documents'] || 'Dokiman'}
+                              </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex gap-1">
                             <Button variant="ghost" size="sm">
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm">
                               <Edit className="h-4 w-4" />
                             </Button>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       </CardHeader>
-                      
                       <CardContent>
                         <div className="space-y-3">
-                          <p className="text-sm text-muted-foreground">{asset.description}</p>
-                          
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm text-muted-foreground">Valè Aktyèl</p>
-                              <p className="font-semibold">${asset.currentValue.toLocaleString()}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm text-muted-foreground">Chanjman</p>
-                              <p className={`font-semibold ${valueChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                {valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString()}
-                              </p>
-                            </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Valè Kounye a:</span>
+                            <span className="font-semibold">${asset.current_value?.toLocaleString() || '0'}</span>
                           </div>
                           
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            <span>Achte: {new Date(asset.purchaseDate).toLocaleDateString('fr-FR')}</span>
-                          </div>
-                          
-                          {asset.warrantyEndDate && (
-                            <div className="flex items-center gap-2 text-sm text-orange-500">
-                              <AlertTriangle className="h-4 w-4" />
-                              <span>Garanti fini: {new Date(asset.warrantyEndDate).toLocaleDateString('fr-FR')}</span>
+                          {asset.location && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Home className="h-4 w-4 text-muted-foreground" />
+                              <span>{asset.location}</span>
                             </div>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="list">
-              <div className="space-y-4">
-                {filteredAssets.map((asset) => {
-                  const IconComponent = categoryIcons[asset.category as keyof typeof categoryIcons] || Home;
-                  const valueChange = asset.currentValue - asset.purchasePrice;
-                  
-                  return (
-                    <Card key={asset.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 bg-primary/10 rounded-lg">
-                              <IconComponent className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">{asset.name}</h3>
-                              <p className="text-sm text-muted-foreground">{asset.description}</p>
-                            </div>
-                          </div>
                           
-                          <div className="flex items-center gap-6">
-                            <div className="text-center">
-                              <p className="text-sm text-muted-foreground">Valè</p>
-                              <p className="font-semibold">${asset.currentValue.toLocaleString()}</p>
+                          {asset.purchase_date && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span>Achte: {new Date(asset.purchase_date).toLocaleDateString('fr-FR')}</span>
                             </div>
-                            <div className="text-center">
-                              <p className="text-sm text-muted-foreground">Chanjman</p>
-                              <p className={`font-semibold ${valueChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                {valueChange >= 0 ? '+' : ''}${valueChange.toLocaleString()}
-                              </p>
+                          )}
+                          
+                          {asset.warranty_end_date && (
+                            <div className="flex items-center gap-2 text-sm text-orange-500">
+                              <AlertTriangle className="h-4 w-4" />
+                              <span>Garanti fini: {new Date(asset.warranty_end_date).toLocaleDateString('fr-FR')}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -345,8 +322,8 @@ export default function Assets() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Object.entries(categoryNames).map(([key, name]) => {
                   const IconComponent = categoryIcons[key as keyof typeof categoryIcons];
-                  const categoryAssets = mockAssets.filter(asset => asset.category === key);
-                  const categoryValue = categoryAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
+                  const categoryAssets = assets.filter(asset => asset.category === key);
+                  const categoryValue = categoryAssets.reduce((sum, asset) => sum + (asset.current_value || 0), 0);
                   
                   return (
                     <Card key={key} className="hover:shadow-md transition-shadow cursor-pointer">
