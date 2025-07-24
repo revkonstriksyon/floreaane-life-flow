@@ -1,0 +1,50 @@
+Paj: Chatbot Asistan (IA Entelijan)
+📌 Wòl li: Gid pèsonèl ou — li kapab reponn, kreye, sonje, raple, modifye, ajiste, e menm vin jwenn ou ak sijesyon san ou mande.
+🔗 Aksè li genyen sou tout paj yo:
+Li ka li, modifye, mete ajou oswa kreye done sou:
+
+✅ Dashboard prensipal: li ka mete ou ajou, chanje mood ou, modifye plan jounen ou, mete rapèl
+✅ Relasyon Sosyal: li ka raple w rele fanmi, fè mesaj pou ou, mete not sou relasyon ki frèt
+✅ Finans: li ka mete depans, raple w bòdwo, fè ti analiz sou depans ou
+✅ Sa ou posede: li ka mete nouvo acha, fè rapèl sou bagay ki bezwen antretyen
+✅ Pwojè: li ka mete nouvo pwojè, voye w rapèl, mande ou validasyon sou etap ki fèt
+✅ Ajanda & Tâches: li ka mete, modifye, raple, oswa deklanche tach pou ou
+✅ Nòt: li ka pran nòt pou ou nenpòt kilè, mete yo nan kategori, fè ti rezime
+✅ Rapò: li ka ekri rapò otomatik chak semèn, chak mwa, chak pwojè, oubyen sou demann
+
+🧠 Fonksyonalite prensipal yo:
+1. 🗣️ Chat Konvèsasyonèl Natif:
+Ou pale avè l natirèlman:
+
+“Choute m demen 6 a.m., mete beny lan nan woutin, epi raple m fè randevou ak notè a.”
+Li reponn, li egzekite, epi l mete li kote ki dwe ye.
+
+2. 🔁 Sistèm Rapèl Avanse ak Notifikasyon Otomatik:
+Li verifye tout bagay:
+Si ou pa konfime ou fè yon tach → li raple w
+Si ou te gen pou poste sou sit ou, li ka voye w notifikasyon
+Si ou bliye pran on nòt, li ka ekri:
+"Ou pa mete nòt sou randevou ak Youri a. Vle mwen ekri sa ou sonje?"
+
+3. 📅 Sijesyon Entelijan sou Ajanda ou:
+Si ou gen espas → li pwopoze:
+"Ou gen 1h lib. Vle w travay sou pwojè 'Kay Kanapevè' oswa rele Flore-Anne?"
+
+4. 📝 Kreyasyon Nòt oswa Kontni Otomatik:
+Ou ka di l:
+“Ekri sa Youri te di m sou plan lopital la nan seksyon nòt pwojè a.”
+Li mete li kote li dwe ye.
+
+5. 📢 Entèvansyon Espontane:
+Si li remake ou inyore tach ou, li ka ekri w li-menm:
+"Bro, ou pa t konfime okenn aksyon depi yè. Vle mwen mete ajanda a ajou?"
+
+6. 📊 Analiz & Rapo Otomatik:
+"Men rapò ou sou tan ou pase sou relasyon/fòmasyon/projè semèn sa."
+
+7. 🎭 Chanjman Mood & Atitid:
+Ou ka di l:
+
+“M santi m pa twò motivasyon jodi a.”
+Li ka adapte notifikasyon, evite chaje w, mete tach ki pi limyè.
+
