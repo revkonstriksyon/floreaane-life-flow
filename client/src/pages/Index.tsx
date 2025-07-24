@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { ResponsiveLayout } from "@/components/layout/ResponsiveLayout";
+import { PullToRefresh, TouchOptimizedButton } from "@/components/mobile/TouchOptimized";
+import { SwipeCard } from "@/components/mobile/SwipeCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +11,8 @@ import { DayPreview } from "@/components/dashboard/DayPreview";
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { MoodSelector } from "@/components/dashboard/MoodSelector";
 import { AISuggestions } from "@/components/dashboard/AISuggestions";
-import { AIChat } from "@/components/ai/AIChat";
 import { SmartTimeSuggestions } from "@/components/ai/SmartTimeSuggestions";
+import { cn } from "@/lib/utils";
 import { 
   CalendarDays, 
   Target, 
@@ -111,18 +114,18 @@ export default function Index() {
       const currentYear = today.getFullYear();
 
       const monthlyIncome = transactions
-        .filter(t => t.type === 'income' && new Date(t.date).getMonth() === currentMonth && new Date(t.date).getFullYear() === currentYear)
+        .filter(t => t.type === 'income' && new Date(t.created_at || new Date()).getMonth() === currentMonth && new Date(t.created_at || new Date()).getFullYear() === currentYear)
         .reduce((sum, t) => sum + t.amount, 0);
 
       const monthlyExpenses = transactions
-        .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === currentMonth && new Date(t.date).getFullYear() === currentYear)
+        .filter(t => t.type === 'expense' && new Date(t.created_at || new Date()).getMonth() === currentMonth && new Date(t.created_at || new Date()).getFullYear() === currentYear)
         .reduce((sum, t) => sum + t.amount, 0);
 
       const upcomingBills = bills.filter(bill => {
         const dueDate = new Date(bill.due_date);
         const weekFromNow = new Date();
         weekFromNow.setDate(weekFromNow.getDate() + 7);
-        return dueDate <= weekFromNow && !bill.is_paid;
+        return dueDate <= weekFromNow && bill.status !== 'paid';
       }).length;
 
       setStats({
@@ -140,8 +143,8 @@ export default function Index() {
 
       // Get upcoming tasks
       const upcoming = tasks
-        .filter(t => t.status === 'pending' && t.scheduled_date)
-        .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
+        .filter(t => t.status === 'pending' && t.due_date)
+        .sort((a, b) => new Date(a.due_date || new Date()).getTime() - new Date(b.due_date || new Date()).getTime())
         .slice(0, 5);
 
       setUpcomingTasks(upcoming);
@@ -153,23 +156,23 @@ export default function Index() {
           type: 'task' as const,
           title: task.title,
           description: `Kategori: ${task.category}`,
-          time: new Date(task.created_at).toLocaleDateString(),
-          status: task.status
+          time: new Date(task.created_at || new Date()).toLocaleDateString(),
+          status: task.status || 'pending'
         })),
         ...projects.slice(0, 2).map(project => ({
           id: project.id,
           type: 'project' as const,
           title: project.name,
-          description: `${project.progress}% konplè`,
-          time: new Date(project.created_at).toLocaleDateString(),
-          status: project.status
+          description: `${project.progress_percentage || 0}% konplè`,
+          time: new Date(project.created_at || new Date()).toLocaleDateString(),
+          status: project.status || 'planning'
         })),
         ...notes.slice(0, 2).map(note => ({
           id: note.id,
           type: 'note' as const,
           title: note.title || 'Sans tit',
           description: note.content.substring(0, 50) + '...',
-          time: new Date(note.created_at).toLocaleDateString()
+          time: new Date(note.created_at || new Date()).toLocaleDateString()
         }))
       ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
 
@@ -197,27 +200,27 @@ export default function Index() {
 
   const taskCompletionRate = stats.totalTasks > 0 ? (stats.completedTasks / stats.totalTasks) * 100 : 0;
   const projectCompletionRate = stats.totalProjects > 0 ? (stats.activeProjects / stats.totalProjects) * 100 : 0;
+  const isMobile = useIsMobile();
+
+  const handleRefresh = async () => {
+    await fetchDashboardData();
+  };
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-background">
-        <Sidebar />
-        <main className="flex-1 overflow-auto flex items-center justify-center">
+      <ResponsiveLayout currentPath="/">
+        <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
             <p className="mt-4 text-muted-foreground">Chaje done yo...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </ResponsiveLayout>
     );
   }
 
-  return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
+  const content = (
+      <div className={cn("p-4", !isMobile && "p-6")}>
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
@@ -229,22 +232,37 @@ export default function Index() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tach Total</p>
+          <div className={cn(
+            "grid gap-4 mb-6",
+            isMobile 
+              ? "grid-cols-2" 
+              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          )}>
+            <SwipeCard
+              className="h-full"
+              rightAction={{
+                icon: <span>📊</span>,
+                label: "Detay",
+                color: "bg-blue-500"
+              }}
+              onSwipeRight={() => window.location.href = '/agenda'}
+            >
+              <Card className="h-full">
+                <CardContent className={cn("p-4", !isMobile && "p-6")}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Tach Total</p>
                     <p className="text-2xl font-bold">{stats.totalTasks}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Progress value={taskCompletionRate} className="flex-1" />
                       <span className="text-sm text-muted-foreground">{taskCompletionRate.toFixed(0)}%</span>
                     </div>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </SwipeCard>
 
             <Card>
               <CardContent className="p-6">
@@ -294,9 +312,17 @@ export default function Index() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className={cn(
+            "grid gap-4",
+            isMobile 
+              ? "grid-cols-1" 
+              : "grid-cols-1 lg:grid-cols-3 gap-6"
+          )}>
             {/* Left Column */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className={cn(
+              "space-y-4",
+              !isMobile && "lg:col-span-2 space-y-6"
+            )}>
               {/* Today's Tasks */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -304,10 +330,14 @@ export default function Index() {
                     <Calendar className="h-5 w-5" />
                     Tach Jou a
                   </CardTitle>
-                  <Button size="sm" variant="outline">
+                  <TouchOptimizedButton 
+                    onClick={() => window.location.href = '/agenda'}
+                    size="sm"
+                    variant="secondary"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Ajoute
-                  </Button>
+                  </TouchOptimizedButton>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -374,7 +404,10 @@ export default function Index() {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6">
+            <div className={cn(
+              "space-y-4",
+              !isMobile && "space-y-6"
+            )}>
               {/* Mood Selector */}
               <Card>
                 <CardHeader>
@@ -451,18 +484,17 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </main>
+  );
 
-      {/* AI Chat */}
-      <AIChat 
-        context={`Dashboard jou a: Mood ,  tach pou jou a,  pwojè aktif.`}
-        suggestions={[
-          "Ki sa m bezwen fè jou a?",
-          "Bay m motivasyon pou jou a",
-          "Ki priyorite yo pi ijan?",
-          "Ki jan pou òganize jounen an?"
-        ]}
-      />
-    </div>
+  return (
+    <ResponsiveLayout currentPath="/">
+      {isMobile ? (
+        <PullToRefresh onRefresh={handleRefresh}>
+          {content}
+        </PullToRefresh>
+      ) : (
+        content
+      )}
+    </ResponsiveLayout>
   );
 }

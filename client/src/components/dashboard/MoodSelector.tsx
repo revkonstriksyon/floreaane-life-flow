@@ -13,10 +13,22 @@ const moods = [
   { id: "happy", label: "Kontan", emoji: "😊", color: "bg-success" },
 ];
 
-export function MoodSelector() {
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+interface MoodSelectorProps {
+  onMoodSelect?: (mood: string) => void;
+  selectedMood?: string;
+}
+
+export function MoodSelector({ onMoodSelect, selectedMood: initialMood }: MoodSelectorProps) {
+  const [selectedMood, setSelectedMood] = useState<string | null>(initialMood || null);
   const [note, setNote] = useState("");
   const { toast } = useToast();
+
+  const handleMoodSelect = (mood: string) => {
+    setSelectedMood(mood);
+    if (onMoodSelect) {
+      onMoodSelect(mood);
+    }
+  };
 
   const handleMoodSubmit = () => {
     if (!selectedMood) return;
@@ -26,8 +38,9 @@ export function MoodSelector() {
       description: `Ou santi w ${moods.find(m => m.id === selectedMood)?.label.toLowerCase()} jodi a!`,
     });
     
-    // TODO: Save to database
-    console.log("Mood saved:", { mood: selectedMood, note });
+    if (onMoodSelect) {
+      onMoodSelect(selectedMood);
+    }
   };
 
   return (
@@ -48,7 +61,7 @@ export function MoodSelector() {
               className={`flex flex-col items-center gap-1 h-auto py-3 ${
                 selectedMood === mood.id ? "ring-2 ring-primary" : ""
               }`}
-              onClick={() => setSelectedMood(mood.id)}
+              onClick={() => handleMoodSelect(mood.id)}
             >
               <span className="text-2xl">{mood.emoji}</span>
               <span className="text-xs">{mood.label}</span>
@@ -67,7 +80,7 @@ export function MoodSelector() {
           onClick={handleMoodSubmit}
           disabled={!selectedMood}
           className="w-full"
-          variant="hero"
+          variant="default"
         >
           Anrejistre Mood Mwen
         </Button>
