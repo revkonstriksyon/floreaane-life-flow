@@ -2,6 +2,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { 
   Home, 
   Calendar, 
@@ -65,14 +66,17 @@ export function Sidebar({ collapsed = false, onToggle, currentPath = "/" }: Side
               </h1>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="h-8 w-8 p-0"
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="h-8 w-8 p-0"
+            >
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
         {!collapsed && (

@@ -141,8 +141,8 @@ export default function Notes() {
   };
 
   const filteredNotes = notes.filter(note => {
-    const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         note.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (note.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (note.content || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "all" || note.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });

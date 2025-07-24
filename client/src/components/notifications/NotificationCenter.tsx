@@ -1,269 +1,467 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, X, Clock, AlertTriangle, Info, CheckCircle, Calendar } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Bell, 
+  Clock, 
+  CheckCircle, 
+  AlertTriangle, 
+  X, 
+  Settings, 
+  Plus,
+  Calendar,
+  MessageSquare,
+  Zap,
+  Brain
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-interface Notification {
+interface NotificationItem {
   id: string;
-  type: 'deadline' | 'overdue' | 'birthday' | 'bill' | 'maintenance' | 'contact';
+  type: 'reminder' | 'during' | 'followup' | 'special';
   title: string;
   message: string;
+  scheduled_time: string;
+  is_read: boolean;
+  is_completed: boolean;
+  related_task_id?: string;
+  related_project_id?: string;
   priority: 'low' | 'medium' | 'high';
   created_at: string;
-  read: boolean;
-  action_url?: string;
 }
 
+interface NotificationSettings {
+  enable_reminders: boolean;
+  reminder_minutes_before: number;
+  enable_during_notifications: boolean;
+  enable_followup_notifications: boolean;
+  followup_delay_minutes: number;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+}
+
+const notificationTypes = {
+  reminder: { label: "Rapèl", color: "bg-blue-500", icon: Clock },
+  during: { label: "Pandan", color: "bg-yellow-500", icon: Bell },
+  followup: { label: "Konfime", color: "bg-green-500", icon: CheckCircle },
+  special: { label: "Espesyal", color: "bg-purple-500", icon: AlertTriangle }
+};
+
+const priorityColors = {
+  low: "bg-gray-500",
+  medium: "bg-yellow-500",
+  high: "bg-red-500"
+};
+
 export function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    generateNotifications();
-  }, []);
-
-  const generateNotifications = async () => {
-    const generatedNotifications: Notification[] = [];
-    const today = new Date();
-
-    try {
-      // Check for overdue tasks
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('status', 'pending');
-
-      if (tasks) {
-        tasks.forEach(task => {
-          if (task.scheduled_date) {
-            const taskDate = new Date(task.scheduled_date);
-            const daysDiff = Math.ceil((today.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (daysDiff > 0) {
-              generatedNotifications.push({
-                id: `task-overdue-${task.id}`,
-                type: 'overdue',
-                title: 'Tach an reta',
-                message: `"${task.title}" te dwe fini depi ${daysDiff} jou`,
-                priority: 'high',
-                created_at: new Date().toISOString(),
-                read: false,
-                action_url: '/agenda'
-              });
-            } else if (daysDiff === 0) {
-              generatedNotifications.push({
-                id: `task-due-${task.id}`,
-                type: 'deadline',
-                title: 'Tach pou jou a',
-                message: `"${task.title}" dwe fini jou a`,
-                priority: 'medium',
-                created_at: new Date().toISOString(),
-                read: false,
-                action_url: '/agenda'
-              });
-            }
-          }
-        });
-      }
-
-      // Check for upcoming bills
-      const { data: bills } = await supabase
-        .from('bills')
-        .select('*')
-        .eq('status', 'pending');
-
-      if (bills) {
-        bills.forEach(bill => {
-          if (bill.due_date) {
-            const billDate = new Date(bill.due_date);
-            const daysDiff = Math.ceil((billDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (daysDiff <= 3 && daysDiff >= 0) {
-              generatedNotifications.push({
-                id: `bill-due-${bill.id}`,
-                type: 'bill',
-                title: 'Faktè prèske rive',
-                message: `"${bill.name}" dwe peye nan ${daysDiff} jou`,
-                priority: daysDiff === 0 ? 'high' : 'medium',
-                created_at: new Date().toISOString(),
-                read: false,
-                action_url: '/finances'
-              });
-            }
-          }
-        });
-      }
-
-      // Check for birthdays
-      const { data: contacts } = await supabase
-        .from('contacts')
-        .select('*')
-        .not('birthday', 'is', null);
-
-      if (contacts) {
-        contacts.forEach(contact => {
-          if (contact.birthday) {
-            const birthday = new Date(contact.birthday);
-            const thisYearBirthday = new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate());
-            const daysDiff = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (daysDiff >= 0 && daysDiff <= 7) {
-              generatedNotifications.push({
-                id: `birthday-${contact.id}`,
-                type: 'birthday',
-                title: 'Anivèsè',
-                message: `${contact.first_name} ${contact.last_name || ''} gen anivèsè ${daysDiff === 0 ? 'jou a' : `nan ${daysDiff} jou`}`,
-                priority: 'low',
-                created_at: new Date().toISOString(),
-                read: false,
-                action_url: '/contacts'
-              });
-            }
-          }
-        });
-      }
-
-      // Check for contacts that need follow-up
-      const { data: contactsToFollow } = await supabase
-        .from('contacts')
-        .select('*')
-        .not('last_contacted', 'is', null)
-        .not('contact_frequency_days', 'is', null);
-
-      if (contactsToFollow) {
-        contactsToFollow.forEach(contact => {
-          if (contact.last_contacted && contact.contact_frequency_days) {
-            const lastContact = new Date(contact.last_contacted);
-            const daysSince = Math.ceil((today.getTime() - lastContact.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (daysSince > contact.contact_frequency_days) {
-              generatedNotifications.push({
-                id: `contact-follow-${contact.id}`,
-                type: 'contact',
-                title: 'Kontak bezwen swiv',
-                message: `Ou pa pale ak ${contact.first_name} depi ${daysSince} jou`,
-                priority: 'medium',
-                created_at: new Date().toISOString(),
-                read: false,
-                action_url: '/contacts'
-              });
-            }
-          }
-        });
-      }
-
-      setNotifications(generatedNotifications);
-      setUnreadCount(generatedNotifications.filter(n => !n.read).length);
-    } catch (error) {
-      console.error('Error generating notifications:', error);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([
+    {
+      id: '1',
+      type: 'reminder',
+      title: 'Randevou ak Doktè',
+      message: 'Sonje randevou ou ak doktè a nan 3h aprèmidi',
+      scheduled_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      is_read: false,
+      is_completed: false,
+      priority: 'high',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      type: 'followup',
+      title: 'Tcheke Pwojè Nèt la',
+      message: 'Eske ou fin fè tâche ki te nan agenda ou a maten an?',
+      scheduled_time: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+      is_read: false,
+      is_completed: false,
+      priority: 'medium',
+      created_at: new Date().toISOString()
     }
-  };
+  ]);
+  const [newNotification, setNewNotification] = useState({
+    title: "",
+    message: "",
+    type: "reminder",
+    priority: "medium",
+    scheduled_time: "",
+    related_task_id: ""
+  });
+  const [settings, setSettings] = useState<NotificationSettings>({
+    enable_reminders: true,
+    reminder_minutes_before: 15,
+    enable_during_notifications: true,
+    enable_followup_notifications: true,
+    followup_delay_minutes: 60,
+    quiet_hours_start: "22:00",
+    quiet_hours_end: "07:00"
+  });
+  const { toast } = useToast();
 
+  // Mark notification as read
   const markAsRead = (notificationId: string) => {
     setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      prev.map(notif => 
+        notif.id === notificationId ? { ...notif, is_read: true } : notif
+      )
     );
-    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    setUnreadCount(0);
+  // Mark notification as completed
+  const markAsCompleted = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === notificationId ? { ...notif, is_completed: true } : notif
+      )
+    );
+    toast({
+      title: "Konfime!",
+      description: "Notifikasyon an make kòm fini.",
+    });
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'deadline': return <Clock className="h-4 w-4" />;
-      case 'overdue': return <AlertTriangle className="h-4 w-4" />;
-      case 'birthday': return <Calendar className="h-4 w-4" />;
-      case 'bill': return <AlertTriangle className="h-4 w-4" />;
-      case 'contact': return <Info className="h-4 w-4" />;
-      default: return <Bell className="h-4 w-4" />;
+  // Delete notification
+  const deleteNotification = (notificationId: string) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
+  };
+
+  // Add new notification
+  const addNotification = () => {
+    if (!newNotification.title || !newNotification.scheduled_time) return;
+    
+    const notification: NotificationItem = {
+      id: Date.now().toString(),
+      ...newNotification,
+      is_read: false,
+      is_completed: false,
+      created_at: new Date().toISOString()
+    } as NotificationItem;
+
+    setNotifications(prev => [...prev, notification]);
+    setNewNotification({
+      title: "",
+      message: "",
+      type: "reminder",
+      priority: "medium",
+      scheduled_time: "",
+      related_task_id: ""
+    });
+    setIsOpen(false);
+    toast({
+      title: "Notifikasyon ajoute!",
+      description: "Nouvo notifikasyon an kreye ak siksè.",
+    });
+  };
+
+  // Check for due notifications
+  useEffect(() => {
+    const checkNotifications = () => {
+      const now = new Date();
+      const dueNotifications = notifications.filter(notif => 
+        !notif.is_read && 
+        new Date(notif.scheduled_time) <= now
+      );
+
+      dueNotifications.forEach(notif => {
+        // Show browser notification if permission granted
+        if (Notification.permission === 'granted') {
+          new Notification(notif.title, {
+            body: notif.message,
+            icon: '/favicon.ico'
+          });
+        }
+
+        // Auto-mark as read
+        markAsRead(notif.id);
+      });
+    };
+
+    const interval = setInterval(checkNotifications, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, [notifications]);
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
     }
-  };
+  }, []);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-500';
-      case 'medium': return 'text-yellow-500';
-      case 'low': return 'text-blue-500';
-      default: return 'text-gray-500';
-    }
-  };
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const pendingNotifications = notifications.filter(n => !n.is_completed);
 
   return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative"
-      >
-        <Bell className="h-4 w-4" />
-        {unreadCount > 0 && (
-          <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500">
-            {unreadCount}
-          </Badge>
-        )}
-      </Button>
-
-      {isOpen && (
-        <Card className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-hidden z-50 shadow-lg">
-          <CardHeader className="pb-3">
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="relative">
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              >
+                {unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Notifikasyon</CardTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Notifikasyon yo ({unreadCount} nouvo)
+              </DialogTitle>
               <div className="flex gap-2">
-                {unreadCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                    Tout li
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                  <X className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsSettingsOpen(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setNewNotification({
+                      title: "",
+                      message: "",
+                      type: "reminder",
+                      priority: "medium", 
+                      scheduled_time: "",
+                      related_task_id: ""
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajoute
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="overflow-y-auto max-h-64 space-y-2">
-            {notifications.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">
-                <CheckCircle className="h-8 w-8 mx-auto mb-2" />
-                <p>Pa gen notifikasyon</p>
-              </div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    notification.read ? 'bg-muted/30' : 'bg-background border-primary/20'
-                  }`}
-                  onClick={() => markAsRead(notification.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-1 ${getPriorityColor(notification.priority)}`}>
-                      {getIcon(notification.type)}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm">{notification.title}</h4>
-                      <p className="text-sm text-muted-foreground">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(notification.created_at).toLocaleTimeString()}
-                      </p>
-                    </div>
-                    {!notification.read && (
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                    )}
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Add New Notification Form */}
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle className="text-lg">Nouvo Notifikasyon</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="notif-title">Tit</Label>
+                    <Input
+                      id="notif-title"
+                      value={newNotification.title}
+                      onChange={(e) => setNewNotification({...newNotification, title: e.target.value})}
+                      placeholder="Tit notifikasyon an..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="notif-type">Tip</Label>
+                    <Select 
+                      value={newNotification.type} 
+                      onValueChange={(value) => setNewNotification({...newNotification, type: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="reminder">Rapèl</SelectItem>
+                        <SelectItem value="during">Pandan</SelectItem>
+                        <SelectItem value="followup">Konfime</SelectItem>
+                        <SelectItem value="special">Espesyal</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </div>
+
+                <div>
+                  <Label htmlFor="notif-message">Mesaj</Label>
+                  <Textarea
+                    id="notif-message"
+                    value={newNotification.message}
+                    onChange={(e) => setNewNotification({...newNotification, message: e.target.value})}
+                    placeholder="Mesaj notifikasyon an..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="notif-time">Dat ak Lè</Label>
+                    <Input
+                      id="notif-time"
+                      type="datetime-local"
+                      value={newNotification.scheduled_time}
+                      onChange={(e) => setNewNotification({...newNotification, scheduled_time: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="notif-priority">Priorite</Label>
+                    <Select 
+                      value={newNotification.priority} 
+                      onValueChange={(value) => setNewNotification({...newNotification, priority: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Ba</SelectItem>
+                        <SelectItem value="medium">Mwayen</SelectItem>
+                        <SelectItem value="high">Wo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={addNotification} 
+                  className="w-full"
+                  disabled={!newNotification.title || !newNotification.scheduled_time}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajoute Notifikasyon
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Notifications List */}
+            <div className="space-y-3">
+              {pendingNotifications.length > 0 ? (
+                pendingNotifications.map((notification) => {
+                  const TypeIcon = notificationTypes[notification.type as keyof typeof notificationTypes]?.icon || Bell;
+                  
+                  return (
+                    <Card key={notification.id} className={`${!notification.is_read ? 'border-primary/50 bg-primary/5' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className={`p-2 rounded-full ${notificationTypes[notification.type as keyof typeof notificationTypes]?.color || 'bg-gray-500'} text-white`}>
+                              <TypeIcon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-medium">{notification.title}</h4>
+                                <Badge 
+                                  variant="outline" 
+                                  className={`${priorityColors[notification.priority as keyof typeof priorityColors] || 'bg-gray-500'} text-white border-none text-xs`}
+                                >
+                                  {notification.priority}
+                                </Badge>
+                                <Badge variant="outline" className={`${notificationTypes[notification.type as keyof typeof notificationTypes]?.color || 'bg-gray-500'} text-white border-none text-xs`}>
+                                  {notificationTypes[notification.type as keyof typeof notificationTypes]?.label || 'Default'}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {new Date(notification.scheduled_time).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            {!notification.is_completed && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => markAsCompleted(notification.id)}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteNotification(notification.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8">
+                  <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">Pa gen notifikasyon</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Paramèt Notifikasyon
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="enable-reminders">Aktive Rapèl yo</Label>
+              <Switch id="enable-reminders" checked={settings?.enable_reminders} />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="enable-during">Aktive Notifikasyon Pandan</Label>
+              <Switch id="enable-during" checked={settings?.enable_during_notifications} />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="enable-followup">Aktive Notifikasyon Konfime</Label>
+              <Switch id="enable-followup" checked={settings?.enable_followup_notifications} />
+            </div>
+
+            <div>
+              <Label htmlFor="reminder-minutes">Rapèl Minit Avan</Label>
+              <Input
+                id="reminder-minutes"
+                type="number"
+                value={settings?.reminder_minutes_before || 15}
+                placeholder="15"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="quiet-start">Lè Silans Kòmanse</Label>
+                <Input
+                  id="quiet-start"
+                  type="time"
+                  value={settings?.quiet_hours_start || "22:00"}
+                />
+              </div>
+              <div>
+                <Label htmlFor="quiet-end">Lè Silans Fini</Label>
+                <Input
+                  id="quiet-end"
+                  type="time"
+                  value={settings?.quiet_hours_end || "07:00"}
+                />
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

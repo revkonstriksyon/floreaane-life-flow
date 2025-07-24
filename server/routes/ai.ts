@@ -1,80 +1,104 @@
-import express from "express";
+import express from 'express';
 import { 
   generateTimeSlotSuggestions, 
   analyzeProjectProgress, 
-  generateWeeklyProgressSummary,
   generateSocialMediaCaptions 
-} from "../services/gemini.js";
+} from '../services/gemini';
 
 const router = express.Router();
 
-// Get time slot suggestions based on mood and available time
-router.post("/time-suggestions", async (req, res) => {
+// Smart time suggestions based on mood and context
+router.post('/time-suggestions', async (req, res) => {
   try {
-    const { mood, availableTime, currentHour, recentActivities, userContext } = req.body;
+    const { mood, availableTime, recentActivities, userContext } = req.body;
     
     const suggestions = await generateTimeSlotSuggestions(
-      mood, 
-      availableTime, 
-      currentHour, 
-      recentActivities || [], 
+      mood,
+      availableTime,
+      new Date().getHours(),
+      recentActivities,
       userContext
     );
     
     res.json({ suggestions });
   } catch (error) {
-    console.error('Error getting time suggestions:', error);
-    res.status(500).json({ error: 'Failed to get AI suggestions' });
+    console.error('AI time suggestions error:', error);
+    res.status(500).json({ 
+      error: 'Pa ka jenere sijesyon yo kounye a',
+      suggestions: []
+    });
   }
 });
 
-// Analyze project progress and get recommendations
-router.post("/project-analysis", async (req, res) => {
+// Project workflow analysis
+router.post('/project-analysis', async (req, res) => {
   try {
-    const { project, tasks, recentActivity } = req.body;
+    const { project, tasks, teamMembers } = req.body;
     
-    const analysis = await analyzeProjectProgress(project, tasks || [], recentActivity || []);
-    
-    res.json(analysis);
-  } catch (error) {
-    console.error('Error analyzing project:', error);
-    res.status(500).json({ error: 'Failed to analyze project' });
-  }
-});
-
-// Generate weekly progress summary
-router.post("/weekly-summary", async (req, res) => {
-  try {
-    const { completedTasks, projects, moodEntries } = req.body;
-    
-    const summary = await generateWeeklyProgressSummary(
-      completedTasks || [], 
-      projects || [], 
-      moodEntries || []
+    const analysis = await analyzeProjectProgress(
+      project,
+      tasks,
+      teamMembers
     );
     
-    res.json(summary);
+    res.json({ analysis });
   } catch (error) {
-    console.error('Error generating weekly summary:', error);
-    res.status(500).json({ error: 'Failed to generate weekly summary' });
+    console.error('AI project analysis error:', error);
+    res.status(500).json({ 
+      error: 'Pa ka fè analiz la kounye a',
+      analysis: {
+        workflow: {},
+        recommendations: [],
+        insights: []
+      }
+    });
   }
 });
 
-// Generate social media captions
-router.post("/social-media-captions", async (req, res) => {
+// Social media caption generation
+router.post('/social-media-captions', async (req, res) => {
   try {
     const { brand, recentPosts, daysSinceLastPost } = req.body;
     
     const captions = await generateSocialMediaCaptions(
-      brand || 'REV', 
-      recentPosts || [], 
-      daysSinceLastPost || 0
+      brand,
+      recentPosts,
+      daysSinceLastPost
     );
     
     res.json({ captions });
   } catch (error) {
-    console.error('Error generating captions:', error);
-    res.status(500).json({ error: 'Failed to generate captions' });
+    console.error('AI social media captions error:', error);
+    res.status(500).json({ 
+      error: 'Pa ka jenere caption yo kounye a',
+      captions: []
+    });
+  }
+});
+
+// General AI assistant chat
+router.post('/chat', async (req, res) => {
+  try {
+    const { message, context, conversationHistory } = req.body;
+    
+    // For now, return a simple response in Haitian Creole
+    const response = {
+      message: `Mwen konprann ou vle konnen sou: "${message}". Mwen ap travay sou fonksyon sa a epi li ap disponib byento. Èske gen lòt bagay mwen ka ede ou ak li?`,
+      suggestions: [
+        "Planifye jou a",
+        "Analiz pwojè yo",
+        "Sijesyon tan",
+        "Rezime semèn nan"
+      ]
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('AI chat error:', error);
+    res.status(500).json({ 
+      error: 'Pa ka reponn kounye a',
+      message: 'Padon, mwen pa ka reponn kounye a. Eseye ankò.'
+    });
   }
 });
 
