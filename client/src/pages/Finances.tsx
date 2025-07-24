@@ -1,106 +1,64 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   DollarSign, 
-  Plus, 
   TrendingUp, 
-  TrendingDown, 
-  PiggyBank,
-  CreditCard,
+  TrendingDown,
   Wallet,
+  CreditCard,
+  PiggyBank,
   Target,
-  AlertTriangle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Calendar,
-  Eye,
-  Edit,
+  Bell,
   Download,
-  Bell
+  Plus,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Calendar,
+  Filter,
+  BarChart3,
+  AlertTriangle
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const mockTransactions = [
-  {
-    id: 1,
-    type: "income",
-    amount: 2500,
-    category: "salary",
-    description: "Salè travay",
-    date: "2024-01-15",
-    method: "bank_transfer"
-  },
-  {
-    id: 2,
-    type: "expense", 
-    amount: 800,
-    category: "housing",
-    description: "Lokasyon kay",
-    date: "2024-01-14",
-    method: "cash"
-  },
-  {
-    id: 3,
-    type: "expense",
-    amount: 150,
-    category: "food",
-    description: "Pwovizyon semèn nan",
-    date: "2024-01-13",
-    method: "card"
-  },
-  {
-    id: 4,
-    type: "income",
-    amount: 500,
-    category: "project",
-    description: "Pwojè web development",
-    date: "2024-01-12",
-    method: "bank_transfer"
-  }
-];
+interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  category: string | null;
+  type: 'income' | 'expense';
+  date: string;
+  recurring: boolean;
+  user_id: string;
+  created_at: string;
+}
 
-const mockBudgets = [
-  {
-    id: 1,
-    category: "food",
-    name: "Manje ak Pwovizyon",
-    monthlyLimit: 400,
-    currentAmount: 275,
-    targetDate: "2024-01-31"
-  },
-  {
-    id: 2,
-    category: "transport",
-    name: "Transpò",
-    monthlyLimit: 200,
-    currentAmount: 120,
-    targetDate: "2024-01-31"
-  },
-  {
-    id: 3,
-    category: "entertainment",
-    name: "Divertiseman",
-    monthlyLimit: 150,
-    currentAmount: 85,
-    targetDate: "2024-01-31"
-  }
-];
+interface Bill {
+  id: string;
+  name: string;
+  amount: number;
+  due_date: string;
+  category: string | null;
+  is_recurring: boolean;
+  is_paid: boolean;
+  user_id: string;
+  created_at: string;
+}
 
-const incomeCategories = {
+const transactionCategories = {
   salary: "Salè",
-  project: "Pwojè",
-  business: "Biznis",
+  freelance: "Travay lib",
   investment: "Envestisman",
+  business: "Biznis",
   gift: "Kado",
-  other: "Lòt"
-};
-
-const expenseCategories = {
   housing: "Lojman",
   food: "Manje",
   transport: "Transpò",
@@ -114,19 +72,150 @@ const expenseCategories = {
 export default function Finances() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
+  const [isBillDialogOpen, setIsBillDialogOpen] = useState(false);
+  const [newTransaction, setNewTransaction] = useState({
+    amount: 0,
+    description: "",
+    category: "",
+    type: "expense" as "income" | "expense",
+    date: new Date().toISOString().split('T')[0],
+    recurring: false
+  });
+  const [newBill, setNewBill] = useState({
+    name: "",
+    amount: 0,
+    due_date: "",
+    category: "",
+    is_recurring: false
+  });
 
-  const totalIncome = mockTransactions
+  useEffect(() => {
+    fetchFinancialData();
+  }, []);
+
+  const fetchFinancialData = async () => {
+    try {
+      const [transactionsResult, billsResult] = await Promise.all([
+        supabase.from('transactions').select('*').order('date', { ascending: false }),
+        supabase.from('bills').select('*').order('due_date', { ascending: true })
+      ]);
+
+      if (transactionsResult.error) throw transactionsResult.error;
+      if (billsResult.error) throw billsResult.error;
+
+      setTransactions(transactionsResult.data || []);
+      setBills(billsResult.data || []);
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addTransaction = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([newTransaction])
+        .select();
+
+      if (error) throw error;
+
+      setTransactions([...transactions, ...(data || [])]);
+      setNewTransaction({
+        amount: 0,
+        description: "",
+        category: "",
+        type: "expense",
+        date: new Date().toISOString().split('T')[0],
+        recurring: false
+      });
+      setIsTransactionDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    }
+  };
+
+  const addBill = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bills')
+        .insert([newBill])
+        .select();
+
+      if (error) throw error;
+
+      setBills([...bills, ...(data || [])]);
+      setNewBill({
+        name: "",
+        amount: 0,
+        due_date: "",
+        category: "",
+        is_recurring: false
+      });
+      setIsBillDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding bill:', error);
+    }
+  };
+
+  const toggleBillPayment = async (billId: string, isPaid: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('bills')
+        .update({ is_paid: !isPaid })
+        .eq('id', billId);
+
+      if (error) throw error;
+
+      setBills(bills.map(bill => 
+        bill.id === billId ? { ...bill, is_paid: !isPaid } : bill
+      ));
+    } catch (error) {
+      console.error('Error updating bill payment:', error);
+    }
+  };
+
+  const totalIncome = transactions
     .filter(t => t.type === "income")
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalExpenses = mockTransactions
+  const totalExpenses = transactions
     .filter(t => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
 
   const balance = totalIncome - totalExpenses;
 
-  const totalBudgetLimit = mockBudgets.reduce((sum, b) => sum + b.monthlyLimit, 0);
-  const totalBudgetUsed = mockBudgets.reduce((sum, b) => sum + b.currentAmount, 0);
+  const upcomingBills = bills.filter(bill => {
+    const today = new Date();
+    const dueDate = new Date(bill.due_date);
+    const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntilDue <= 7 && daysUntilDue >= 0 && !bill.is_paid;
+  });
+
+  const overdueBills = bills.filter(bill => {
+    const today = new Date();
+    const dueDate = new Date(bill.due_date);
+    return dueDate < today && !bill.is_paid;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <main className="flex-1 overflow-auto flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Chaje done finansye yo...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -158,26 +247,93 @@ export default function Finances() {
                 <Download className="h-4 w-4 mr-2" />
                 Rapò
               </Button>
-              <Button size="sm" className="bg-gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvo Transakyon
-              </Button>
+              <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-gradient-primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvo Transakyon
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Ajoute nouvo transakyon</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="type">Kalite transakyon</Label>
+                      <Select value={newTransaction.type} onValueChange={(value: "income" | "expense") => setNewTransaction({...newTransaction, type: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="income">Kòb ki antre</SelectItem>
+                          <SelectItem value="expense">Depans</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="amount">Kantite ($)</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        value={newTransaction.amount}
+                        onChange={(e) => setNewTransaction({...newTransaction, amount: parseFloat(e.target.value) || 0})}
+                        placeholder="100.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Deskripsyon</Label>
+                      <Input
+                        id="description"
+                        value={newTransaction.description}
+                        onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})}
+                        placeholder="Achte manje, salè, etc."
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="category">Kategori</Label>
+                      <Select value={newTransaction.category} onValueChange={(value) => setNewTransaction({...newTransaction, category: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chwazi kategori" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(transactionCategories).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="date">Dat</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={newTransaction.date}
+                        onChange={(e) => setNewTransaction({...newTransaction, date: e.target.value})}
+                      />
+                    </div>
+                    <Button onClick={addTransaction} className="w-full">
+                      Ajoute transakyon an
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
 
-        {/* Financial Overview */}
+        {/* Quick Stats */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Antre Lajan</p>
-                  <p className="text-2xl font-bold text-green-600">${totalIncome.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Balans Total</p>
+                  <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    ${balance.toLocaleString()}
+                  </p>
                 </div>
-                <div className="p-2 bg-green-100 rounded-full">
-                  <ArrowUpRight className="h-6 w-6 text-green-600" />
-                </div>
+                <Wallet className={`h-8 w-8 ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`} />
               </div>
             </CardContent>
           </Card>
@@ -186,28 +342,12 @@ export default function Finances() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Depans</p>
-                  <p className="text-2xl font-bold text-red-600">${totalExpenses.toLocaleString()}</p>
-                </div>
-                <div className="p-2 bg-red-100 rounded-full">
-                  <ArrowDownRight className="h-6 w-6 text-red-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Balans</p>
-                  <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${balance.toLocaleString()}
+                  <p className="text-sm text-muted-foreground">Kòb ki Antre</p>
+                  <p className="text-2xl font-bold text-green-500">
+                    ${totalIncome.toLocaleString()}
                   </p>
                 </div>
-                <div className={`p-2 rounded-full ${balance >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                  <Wallet className={`h-6 w-6 ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-                </div>
+                <ArrowUpCircle className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
@@ -216,12 +356,26 @@ export default function Finances() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Bidjè Itilize</p>
-                  <p className="text-2xl font-bold">{Math.round((totalBudgetUsed / totalBudgetLimit) * 100)}%</p>
+                  <p className="text-sm text-muted-foreground">Depans</p>
+                  <p className="text-2xl font-bold text-red-500">
+                    ${totalExpenses.toLocaleString()}
+                  </p>
                 </div>
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Target className="h-6 w-6 text-blue-600" />
+                <ArrowDownCircle className="h-8 w-8 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Faktè ki Rete</p>
+                  <p className="text-2xl font-bold text-orange-500">
+                    {upcomingBills.length + overdueBills.length}
+                  </p>
                 </div>
+                <AlertTriangle className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
@@ -230,14 +384,12 @@ export default function Finances() {
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="overview" className="w-full">
-            <div className="flex items-center justify-between mb-6">
-              <TabsList>
-                <TabsTrigger value="overview">Apèsi</TabsTrigger>
-                <TabsTrigger value="transactions">Transakyon</TabsTrigger>
-                <TabsTrigger value="budgets">Bidjè</TabsTrigger>
-                <TabsTrigger value="goals">Objektif</TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList className="mb-6">
+              <TabsTrigger value="overview">Apèsi</TabsTrigger>
+              <TabsTrigger value="transactions">Transakyon</TabsTrigger>
+              <TabsTrigger value="bills">Faktè</TabsTrigger>
+              <TabsTrigger value="analytics">Analiz</TabsTrigger>
+            </TabsList>
 
             <TabsContent value="overview">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -246,39 +398,35 @@ export default function Finances() {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span>Transakyon Resan</span>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />
+                      <Button variant="outline" size="sm">
                         Wè Tout
                       </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {mockTransactions.slice(0, 5).map((transaction) => (
-                        <div key={transaction.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      {transactions.slice(0, 5).map((transaction) => (
+                        <div key={transaction.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
                               {transaction.type === 'income' ? 
-                                <ArrowUpRight className={`h-4 w-4 text-green-600`} /> :
-                                <ArrowDownRight className={`h-4 w-4 text-red-600`} />
+                                <ArrowUpCircle className="h-4 w-4 text-green-600" /> :
+                                <ArrowDownCircle className="h-4 w-4 text-red-600" />
                               }
                             </div>
                             <div>
                               <p className="font-medium">{transaction.description}</p>
                               <p className="text-sm text-muted-foreground">
-                                {transaction.type === 'income' ? 
-                                  incomeCategories[transaction.category as keyof typeof incomeCategories] :
-                                  expenseCategories[transaction.category as keyof typeof expenseCategories]
-                                }
+                                {transactionCategories[transaction.category as keyof typeof transactionCategories] || transaction.category}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            <p className={`font-semibold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
                               {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toLocaleString()}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(transaction.date).toLocaleDateString('fr-FR')}
+                              {new Date(transaction.date).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -287,39 +435,134 @@ export default function Finances() {
                   </CardContent>
                 </Card>
 
-                {/* Budget Status */}
+                {/* Upcoming Bills */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Eta Bidjè Mwa Sa</CardTitle>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Faktè ki Gen pou Peye</span>
+                      <Dialog open={isBillDialogOpen} onOpenChange={setIsBillDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Plus className="h-4 w-4 mr-1" />
+                            Ajoute
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Ajoute nouvo faktè</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="name">Non faktè a</Label>
+                              <Input
+                                id="name"
+                                value={newBill.name}
+                                onChange={(e) => setNewBill({...newBill, name: e.target.value})}
+                                placeholder="Kouran, dlo, telefòn..."
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="amount">Kantite ($)</Label>
+                              <Input
+                                id="amount"
+                                type="number"
+                                value={newBill.amount}
+                                onChange={(e) => setNewBill({...newBill, amount: parseFloat(e.target.value) || 0})}
+                                placeholder="50.00"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="due_date">Dat limit</Label>
+                              <Input
+                                id="due_date"
+                                type="date"
+                                value={newBill.due_date}
+                                onChange={(e) => setNewBill({...newBill, due_date: e.target.value})}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="category">Kategori</Label>
+                              <Select value={newBill.category} onValueChange={(value) => setNewBill({...newBill, category: value})}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Chwazi kategori" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="housing">Lojman</SelectItem>
+                                  <SelectItem value="utilities">Sèvis</SelectItem>
+                                  <SelectItem value="insurance">Asirans</SelectItem>
+                                  <SelectItem value="subscription">Abonman</SelectItem>
+                                  <SelectItem value="other">Lòt</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button onClick={addBill} className="w-full">
+                              Ajoute faktè a
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {mockBudgets.map((budget) => {
-                        const percentage = (budget.currentAmount / budget.monthlyLimit) * 100;
-                        const isOverBudget = percentage > 100;
-                        
-                        return (
-                          <div key={budget.id} className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium">{budget.name}</span>
-                              <div className="flex items-center gap-2">
-                                {isOverBudget && <AlertTriangle className="h-4 w-4 text-red-500" />}
-                                <span className={`text-sm ${isOverBudget ? 'text-red-600' : 'text-muted-foreground'}`}>
-                                  ${budget.currentAmount} / ${budget.monthlyLimit}
-                                </span>
-                              </div>
-                            </div>
-                            <Progress 
-                              value={Math.min(percentage, 100)} 
-                              className={`h-2 ${isOverBudget ? 'bg-red-100' : ''}`}
-                            />
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>{Math.round(percentage)}% itilize</span>
-                              <span>${budget.monthlyLimit - budget.currentAmount} ki rete</span>
+                      {/* Overdue Bills */}
+                      {overdueBills.map((bill) => (
+                        <div key={bill.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                          <div className="flex items-center gap-3">
+                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                            <div>
+                              <p className="font-medium text-red-900">{bill.name}</p>
+                              <p className="text-sm text-red-600">
+                                An reta: {new Date(bill.due_date).toLocaleDateString()}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })}
+                          <div className="text-right">
+                            <p className="font-semibold text-red-500">${bill.amount.toLocaleString()}</p>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => toggleBillPayment(bill.id, bill.is_paid)}
+                              className="mt-1 text-xs"
+                            >
+                              Make Peye
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Upcoming Bills */}
+                      {upcomingBills.map((bill) => (
+                        <div key={bill.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <div className="flex items-center gap-3">
+                            <Calendar className="h-5 w-5 text-yellow-600" />
+                            <div>
+                              <p className="font-medium">{bill.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(bill.due_date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">${bill.amount.toLocaleString()}</p>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => toggleBillPayment(bill.id, bill.is_paid)}
+                              className="mt-1 text-xs"
+                            >
+                              Make Peye
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {upcomingBills.length === 0 && overdueBills.length === 0 && (
+                        <div className="text-center py-6">
+                          <PiggyBank className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">Pa gen faktè ki gen pou peye kounye a</p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -329,61 +572,48 @@ export default function Finances() {
             <TabsContent value="transactions">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Tout Transakyon</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Input placeholder="Rechèch..." className="w-64" />
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Tout Transakyon yo</span>
+                    <div className="flex gap-2">
                       <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-2" />
                         Filtre
                       </Button>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Ekspòte
+                      </Button>
                     </div>
-                  </div>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {mockTransactions.map((transaction) => (
-                      <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors">
+                  <div className="space-y-4">
+                    {transactions.map((transaction) => (
+                      <div key={transaction.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-4">
                           <div className={`p-3 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
                             {transaction.type === 'income' ? 
-                              <TrendingUp className="h-5 w-5 text-green-600" /> :
-                              <TrendingDown className="h-5 w-5 text-red-600" />
+                              <ArrowUpCircle className="h-5 w-5 text-green-600" /> :
+                              <ArrowDownCircle className="h-5 w-5 text-red-600" />
                             }
                           </div>
                           <div>
-                            <p className="font-semibold">{transaction.description}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {transaction.type === 'income' ? 
-                                  incomeCategories[transaction.category as keyof typeof incomeCategories] :
-                                  expenseCategories[transaction.category as keyof typeof expenseCategories]
-                                }
+                            <p className="font-medium text-lg">{transaction.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>{new Date(transaction.date).toLocaleDateString()}</span>
+                              <Badge variant="outline">
+                                {transactionCategories[transaction.category as keyof typeof transactionCategories] || transaction.category}
                               </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {transaction.method === 'cash' ? 'Kach' : 
-                                 transaction.method === 'card' ? 'Kat' : 'Bank'}
-                              </span>
+                              {transaction.recurring && (
+                                <Badge variant="secondary">Rekuran</Badge>
+                              )}
                             </div>
                           </div>
                         </div>
-                        
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          <p className={`text-xl font-bold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
                             {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toLocaleString()}
                           </p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(transaction.date).toLocaleDateString('fr-FR')}
-                          </p>
-                        </div>
-                        
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
                         </div>
                       </div>
                     ))}
@@ -392,96 +622,112 @@ export default function Finances() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="budgets">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockBudgets.map((budget) => {
-                  const percentage = (budget.currentAmount / budget.monthlyLimit) * 100;
-                  const isOverBudget = percentage > 100;
-                  const remaining = budget.monthlyLimit - budget.currentAmount;
-                  
-                  return (
-                    <Card key={budget.id} className={`${isOverBudget ? 'border-red-200 bg-red-50/50' : ''}`}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">{budget.name}</CardTitle>
-                          {isOverBudget && <AlertTriangle className="h-5 w-5 text-red-500" />}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="text-center">
-                            <p className="text-3xl font-bold">${budget.currentAmount.toLocaleString()}</p>
-                            <p className="text-sm text-muted-foreground">nan ${budget.monthlyLimit.toLocaleString()}</p>
+            <TabsContent value="bills">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Jesyon Faktè</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {bills.map((bill) => {
+                      const today = new Date();
+                      const dueDate = new Date(bill.due_date);
+                      const isOverdue = dueDate < today && !bill.is_paid;
+                      const isUpcoming = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) <= 7;
+                      
+                      return (
+                        <div key={bill.id} className={`flex items-center justify-between p-4 rounded-lg border ${
+                          bill.is_paid ? 'bg-green-50 border-green-200' :
+                          isOverdue ? 'bg-red-50 border-red-200' :
+                          isUpcoming ? 'bg-yellow-50 border-yellow-200' :
+                          'bg-muted/50'
+                        }`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`p-3 rounded-full ${
+                              bill.is_paid ? 'bg-green-100' :
+                              isOverdue ? 'bg-red-100' :
+                              isUpcoming ? 'bg-yellow-100' :
+                              'bg-gray-100'
+                            }`}>
+                              <CreditCard className={`h-5 w-5 ${
+                                bill.is_paid ? 'text-green-600' :
+                                isOverdue ? 'text-red-600' :
+                                isUpcoming ? 'text-yellow-600' :
+                                'text-gray-600'
+                              }`} />
+                            </div>
+                            <div>
+                              <p className="font-medium text-lg">{bill.name}</p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span>Dat limit: {new Date(bill.due_date).toLocaleDateString()}</span>
+                                {bill.category && (
+                                  <Badge variant="outline">{bill.category}</Badge>
+                                )}
+                                {bill.is_recurring && (
+                                  <Badge variant="secondary">Rekuran</Badge>
+                                )}
+                                {bill.is_paid && (
+                                  <Badge variant="outline" className="bg-green-100 text-green-800">
+                                    Peye
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          
-                          <Progress 
-                            value={Math.min(percentage, 100)} 
-                            className={`h-3 ${isOverBudget ? 'bg-red-100' : ''}`}
-                          />
-                          
-                          <div className="flex justify-between text-sm">
-                            <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-muted-foreground'}>
-                              {Math.round(percentage)}% itilize
-                            </span>
-                            <span className={remaining >= 0 ? 'text-green-600' : 'text-red-600'}>
-                              {remaining >= 0 ? `$${remaining} ki rete` : `$${Math.abs(remaining)} depase`}
-                            </span>
-                          </div>
-                          
-                          <div className="flex gap-2 pt-2">
-                            <Button variant="outline" size="sm" className="flex-1">
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
+                          <div className="text-right">
+                            <p className="text-xl font-bold">${bill.amount.toLocaleString()}</p>
+                            <Button 
+                              size="sm" 
+                              variant={bill.is_paid ? "secondary" : "default"}
+                              onClick={() => toggleBillPayment(bill.id, bill.is_paid)}
+                              className="mt-2"
+                            >
+                              {bill.is_paid ? 'Make pa peye' : 'Make peye'}
                             </Button>
-                            <Button variant="outline" size="sm" className="flex-1">
-                              <Eye className="h-3 w-3 mr-1" />
-                              Detay
-                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-                
-                {/* Add New Budget Card */}
-                <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer">
-                  <CardContent className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
-                    <div className="p-4 bg-primary/10 rounded-full mb-4">
-                      <Plus className="h-8 w-8 text-primary" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Nouvo Bidjè</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Kreye yon nouvo bidjè pou kontwòle depans ou yo
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
-            <TabsContent value="goals">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <TabsContent value="analytics">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <PiggyBank className="h-5 w-5 text-blue-500" />
-                      Fon Ijans
+                      <BarChart3 className="h-5 w-5" />
+                      Analiz Depans
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold">$2,500</p>
-                        <p className="text-sm text-muted-foreground">nan $5,000</p>
-                      </div>
-                      <Progress value={50} className="h-2" />
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>50% konplete</span>
-                        <span>$2,500 ki rete</span>
-                      </div>
-                      <p className="text-xs text-center text-muted-foreground">
-                        Objektif: Mès 2024
-                      </p>
+                      {Object.entries(
+                        transactions
+                          .filter(t => t.type === 'expense')
+                          .reduce((acc, t) => {
+                            const category = t.category || 'other';
+                            acc[category] = (acc[category] || 0) + t.amount;
+                            return acc;
+                          }, {} as Record<string, number>)
+                      )
+                      .sort(([,a], [,b]) => b - a)
+                      .map(([category, amount]) => (
+                        <div key={category} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 bg-primary rounded"></div>
+                            <span>{transactionCategories[category as keyof typeof transactionCategories] || category}</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">${amount.toLocaleString()}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {((amount / totalExpenses) * 100).toFixed(1)}%
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -489,37 +735,42 @@ export default function Finances() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Laptop className="h-5 w-5 text-green-500" />
-                      Laptop Nouvo
+                      <Target className="h-5 w-5" />
+                      Rezime Mwa a
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="text-center">
-                        <p className="text-2xl font-bold">$1,200</p>
-                        <p className="text-sm text-muted-foreground">nan $2,000</p>
+                        <div className="text-3xl font-bold mb-2">
+                          {totalIncome > totalExpenses ? (
+                            <span className="text-green-500">+${(totalIncome - totalExpenses).toLocaleString()}</span>
+                          ) : (
+                            <span className="text-red-500">-${(totalExpenses - totalIncome).toLocaleString()}</span>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground">
+                          {totalIncome > totalExpenses ? 'Pwodiktif' : 'Pèt'} mwa sa a
+                        </p>
                       </div>
-                      <Progress value={60} className="h-2" />
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>60% konplete</span>
-                        <span>$800 ki rete</span>
-                      </div>
-                      <p className="text-xs text-center text-muted-foreground">
-                        Objektif: Avril 2024
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                <Card className="border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer">
-                  <CardContent className="flex flex-col items-center justify-center h-full text-center">
-                    <div className="p-4 bg-primary/10 rounded-full mb-4">
-                      <Target className="h-8 w-8 text-primary" />
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Kòb ki antre:</span>
+                          <span className="font-semibold text-green-500">${totalIncome.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Depans:</span>
+                          <span className="font-semibold text-red-500">${totalExpenses.toLocaleString()}</span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between items-center">
+                          <span className="font-medium">Net:</span>
+                          <span className={`font-bold ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            ${Math.abs(balance).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-semibold mb-2">Nouvo Objektif</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Mete yon nouvo objektif finansye
-                    </p>
                   </CardContent>
                 </Card>
               </div>
