@@ -1,0 +1,86 @@
+ Paj: Pwojè mwen
+🔷 1. Header / Quick Overview
+🔘 Total pwojè yo (active, fini, abandone)
+🔘 Stat progress jeneral (bar %, charts)
+🔘 Filtrage rapid: Aktif | An planifikasyon | Anret | Fini
+🔘 Bouton: + Nouvo pwojè
+
+📁 2. Lis Pwojè yo (ak kat oswa tab)
+Chak pwojè gen:
+📌 Non & Deskripsyon kout
+⏳ Eta: An planifikasyon | An devlopman | An kontwòl | Fini
+🕓 Deadline / Delè
+
+🧠 Kategori: Pèsonèl, Travay, Rev Konstriksyon, Rap, Biznis, elatriye.
+👥 Kò ekip / Moun enplike (avèk tag oswa avatar)
+📊 % Avansman
+🔖 Tags: Urgent, High Impact, Client, Solo, elatriye
+🔁 Dènye aktivite: dat & aksyon
+🧷 Bouton rapid: Edit, Track, Note, Link
+
+🧠 3. Fonksyonalite prensipal nan chak pwojè
+Apre w klike sou yon pwojè, ou antre nan yon workspace dedye:
+➤ A. enfo jeneral pwojè a
+Tit, deskripsyon long, objektif (mache / pèsonèl)
+Sitiyasyon jodi a
+Kisa siksè vle di?
+
+➤ B. Taks / Workflow
+🪢 Subtasks, dependencies
+⏰ Dat kòmansman ak dat limit
+⏳ Priorite (baryè koulè, drag & drop)
+✔️ Checkbox & automatisation
+
+➤ C. Dokiman & Piès Joint
+Ajoute: plan, foto, pdf, kont ak KPI
+Link ak Google Drive / Notion / Canva / Figma
+
+➤ D. Finasman / Bidjè (si sa aplikab)
+💵 Estimasyon total
+🧾 Depans jiska prezan
+
+📈 KPI sou ROI, cashflow, savings, fon
+
+➤ E. Zòn Kolaborasyon (si an ekip)
+Chat entegre oswa komment sou chak task
+Notifikasyon IA
+Antre objektif chak manm
+Wòl chak moun (Designer, Dev, Client, etc.)
+
+➤ F. Tracking & AI
+AI rezime pwogrè chak semèn
+AI rekòmande pwochen aksyon
+Sijesyon pou optimize workflow / delegasyon
+Tracking tan (manèl oswa otomatik)
+
+🧠 Fonksyonalite Avanse
+Fonksyonalite	Deskripsyon
+🔄 Duplicasyon pwojè	Kreye modèl pou pwojè ki sanble
+📆 Entegrasyon ak kalandriye	Google/Apple Calendar sync
+📎 Link ak lòt paj	Link ak Byen, Finans, Moun, Objektif
+🔍 Rechèch entelijan	Rechèch pa moun, tag, kontèks
+🎯 IA Assistant	Sijere estrikti pwojè, mete milestone otomatik
+🗃️ Achiv Pwojè	Pou pwojè ki fini oswa abandone
+
+🌟 Ide pou kategori pwojè
+Travay / Kliyan
+Konstriksyon / Imobilye
+Kontni / Rezo Sosyal
+Woutin / Devlopman Pèsonèl
+Mizik / Atistik
+Aksyon Legal / Administratif
+Vwayaj / Lojistik
+Startup / SaaS / MVP
+Finans / Objektif Ekonomi
+
+Pwojè ou poko deside sou yo men ou mete kòm lide oubyen opòtinite
+Ou ka mete tags tankou #ide, #swadizan, #potansyèl
+pwoje ke ia pwopoze m 
+
+👨‍💻 Fonksyonalite 
+✅ Kanban View (To Do / In Progress / Done)
+🔁 Notifikasyon (pou tach ki apwoche)
+
+📊 Dashboard estatistik: Konbyen pwojè, konbyen an pwogrè, konbyen fini
+📤 Export pou pataje è (PDF, CSV)
+🔐 Sekirite oswa "Private" mode pou pwojè sansib

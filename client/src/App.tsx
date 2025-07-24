@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router, Route, Switch } from "wouter";
 import Index from "@/pages/Index";
 import Projects from "@/pages/ProjectsSimple";
-import ProjectDetail from "@/pages/ProjectDetail";
+import ProjectDetail from "@/pages/ProjectDetailSimple";
 import AIAssistant from "./pages/AIAssistantSimple";
 import Agenda from "@/pages/AgendaSimple";
 import Assets from "@/pages/Assets";
