@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +30,7 @@ import {
   Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 
 interface Contact {
   id: string;
@@ -61,10 +61,11 @@ const relationshipTypes = {
 };
 
 export default function Contacts() {
+  const [, setLocation] = useLocation();
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newContact, setNewContact] = useState({
@@ -146,7 +147,7 @@ export default function Contacts() {
     const today = new Date();
     const lastContact = new Date(contact.last_contacted);
     const daysSince = Math.ceil((today.getTime() - lastContact.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysSince > contact.contact_frequency_days) {
       return { status: "overdue", label: "An reta", color: "text-red-500" };
     }
@@ -177,7 +178,7 @@ export default function Contacts() {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         currentPath="/contacts"
       />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
@@ -190,7 +191,7 @@ export default function Contacts() {
                 Jere ak nourri relasyon ou yo
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -303,7 +304,7 @@ export default function Contacts() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -362,7 +363,7 @@ export default function Contacts() {
                   const relType = relationshipTypes[contact.relationship_type as keyof typeof relationshipTypes];
                   const status = getContactStatus(contact);
                   const IconComponent = relType?.icon || Users;
-                  
+
                   return (
                     <Card key={contact.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="text-center pb-3">
@@ -371,11 +372,11 @@ export default function Contacts() {
                             {contact.first_name[0]}{contact.last_name?.[0] || ''}
                           </AvatarFallback>
                         </Avatar>
-                        
+
                         <CardTitle className="text-lg">
                           {contact.first_name} {contact.last_name || ''}
                         </CardTitle>
-                        
+
                         <div className="flex items-center justify-center gap-2">
                           <Badge variant="outline" className={`${relType?.color || 'bg-gray-500'} text-white border-none`}>
                             <IconComponent className="h-3 w-3 mr-1" />
@@ -386,7 +387,7 @@ export default function Contacts() {
                           </Badge>
                         </div>
                       </CardHeader>
-                      
+
                       <CardContent>
                         <div className="space-y-2 text-sm">
                           {contact.email && (
@@ -395,14 +396,14 @@ export default function Contacts() {
                               <span>{contact.email}</span>
                             </div>
                           )}
-                          
+
                           {contact.phone && (
                             <div className="flex items-center gap-2">
                               <Phone className="h-4 w-4 text-muted-foreground" />
                               <span>{contact.phone}</span>
                             </div>
                           )}
-                          
+
                           {contact.company && (
                             <div className="flex items-center gap-2">
                               <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -423,7 +424,7 @@ export default function Contacts() {
                             </p>
                           )}
                         </div>
-                        
+
                         <div className="flex gap-2 mt-4">
                           <Button variant="outline" size="sm" className="flex-1">
                             <Edit className="h-4 w-4 mr-1" />
@@ -446,7 +447,7 @@ export default function Contacts() {
                   const relType = relationshipTypes[contact.relationship_type as keyof typeof relationshipTypes];
                   const status = getContactStatus(contact);
                   const IconComponent = relType?.icon || Users;
-                  
+
                   return (
                     <Card key={contact.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
@@ -457,7 +458,7 @@ export default function Contacts() {
                                 {contact.first_name[0]}{contact.last_name?.[0] || ''}
                               </AvatarFallback>
                             </Avatar>
-                            
+
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold text-lg">
@@ -468,7 +469,7 @@ export default function Contacts() {
                                   {relType?.label || 'Konesans'}
                                 </Badge>
                               </div>
-                              
+
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 {contact.email && (
                                   <span className="flex items-center gap-1">
@@ -485,12 +486,16 @@ export default function Contacts() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className={status.color}>
                               {status.label}
                             </Badge>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setLocation(`/contacts/${contact.id}`)}
+                            >
                               <Edit className="h-4 w-4 mr-1" />
                               Modifye
                             </Button>

@@ -197,9 +197,108 @@ export default function Agenda() {
       const taskDate = new Date(task.scheduled_date);
       return taskDate.toDateString() === date.toDateString();
     });
+  };
 
+  const getTasksForWeek = (startDate: Date) => {
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
 
-  if (isLoading) {
+    return tasks.filter(task => {
+      if (!task.scheduled_date) return false;
+      const taskDate = new Date(task.scheduled_date);
+      return taskDate >= startDate && taskDate <= endDate;
+    });
+  };
+
+  const getTasksForMonth = (date: Date) => {
+    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+    return tasks.filter(task => {
+      if (!task.scheduled_date) return false;
+      const taskDate = new Date(task.scheduled_date);
+      return taskDate >= startOfMonth && taskDate <= endOfMonth;
+    });
+  };
+
+  const getPriorityTasks = () => {
+    return tasks.filter(task => task.priority === 'high' && task.status !== 'completed');
+  };
+
+  const getOverdueTasks = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return tasks.filter(task => {
+      if (!task.scheduled_date || task.status === 'completed') return false;
+      const taskDate = new Date(task.scheduled_date);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate < today;
+    });
+  };
+
+  const getUpcomingTasks = () => {
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+
+    return tasks.filter(task => {
+      if (!task.scheduled_date || task.status === 'completed') return false;
+      const taskDate = new Date(task.scheduled_date);
+      return taskDate > today && taskDate <= nextWeek;
+    });
+  };
+
+  const todayTasks = getTasksForDate(new Date());
+
+  const todayFilteredTasks = tasks.filter(task => {
+    if (!selectedDate) return false;
+    const taskDate = new Date(task.scheduled_date);
+    return taskDate.toDateString() === selectedDate.toDateString();
+  });
+
+  const getTasksForWeek = (date: Date) => {
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    return tasks.filter(task => {
+      if (!task.scheduled_date) return false;
+      const taskDate = new Date(task.scheduled_date);
+      return taskDate >= startOfWeek && taskDate <= endOfWeek;
+    });
+  };
+
+  const filteredTasks = tasks.filter(task =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.objective?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const upcomingTasks = tasks.filter(task => {
+    if (!task.scheduled_date) return false;
+    const taskDate = new Date(task.scheduled_date);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    return taskDate > today && task.status === 'pending';
+  }).slice(0, 5);
+
+  const completedToday = todayTasks.filter(t => t.status === 'completed').length;
+  const pendingToday = todayTasks.filter(t => t.status === 'pending').length;
+  const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status === 'pending').length;
+
+  const selectedDateTasks = tasks.filter(task => {
+    if (!selectedDate) return false;
+    const taskDate = new Date(task.due_date);
+    return taskDate.toDateString() === selectedDate.toDateString();
+  });
+
+  const completedTasksToday = todayTasks.filter(task => task.status === 'completed').length;
+  const totalTasksToday = todayTasks.length;
+  const completionRate = totalTasksToday > 0 ? (completedTasksToday / totalTasksToday) * 100 : 0;
+
+if (isLoading) {
     return (
       <div className="flex h-screen bg-background">
         <Sidebar />
@@ -216,7 +315,7 @@ export default function Agenda() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
@@ -229,7 +328,7 @@ export default function Agenda() {
                 Òganize ak jere tan ou chak jou
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -390,7 +489,7 @@ export default function Agenda() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -454,7 +553,7 @@ export default function Agenda() {
                           todayTasks.map((task) => {
                             const category = taskCategories[task.category as keyof typeof taskCategories];
                             const priority = priorityColors[task.priority as keyof typeof priorityColors];
-                            
+
                             return (
                               <div key={task.id} className={`flex items-center gap-3 p-4 rounded-lg border ${task.status === 'completed' ? 'bg-green-50 border-green-200' : 'bg-muted/50'}`}>
                                 <button 
@@ -466,7 +565,7 @@ export default function Agenda() {
                                     <Circle className="h-6 w-6 text-muted-foreground hover:text-green-500" />
                                   }
                                 </button>
-                                
+
                                 <div className="flex-1">
                                   <h3 className={`font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                                     {task.title}
@@ -500,7 +599,7 @@ export default function Agenda() {
                                     )}
                                   </div>
                                 </div>
-                                
+
                                 <div className="flex gap-1">
                                   <Button variant="ghost" size="sm" onClick={() => setSelectedTask(task)}>
                                     <Edit className="h-4 w-4" />
@@ -555,11 +654,11 @@ export default function Agenda() {
                     {upcomingTasks.map((task) => {
                       const category = taskCategories[task.category as keyof typeof taskCategories];
                       const priority = priorityColors[task.priority as keyof typeof priorityColors];
-                      
+
                       return (
                         <div key={task.id} className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                           <Circle className="h-6 w-6 text-muted-foreground" />
-                          
+
                           <div className="flex-1">
                             <h3 className="font-medium">{task.title}</h3>
                             {task.objective && (
@@ -588,7 +687,7 @@ export default function Agenda() {
                               )}
                             </div>
                           </div>
-                          
+
                           <Button variant="ghost" size="sm" onClick={() => setSelectedTask(task)}>
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -612,7 +711,7 @@ export default function Agenda() {
                         {day}
                       </div>
                     ))}
-                    
+
                     {/* Calendar days would be generated here */}
                     <div className="col-span-7 text-center text-muted-foreground py-8">
                       Kalandriye ki gen pou devlope ak fonksyonalite konplè
@@ -632,7 +731,7 @@ export default function Agenda() {
                     {filteredTasks.map((task) => {
                       const category = taskCategories[task.category as keyof typeof taskCategories];
                       const priority = priorityColors[task.priority as keyof typeof priorityColors];
-                      
+
                       return (
                         <div key={task.id} className={`flex items-center gap-3 p-4 rounded-lg border ${task.status === 'completed' ? 'bg-green-50 border-green-200' : 'bg-muted/50'}`}>
                           <button 
@@ -644,7 +743,7 @@ export default function Agenda() {
                               <Circle className="h-6 w-6 text-muted-foreground hover:text-green-500" />
                             }
                           </button>
-                          
+
                           <div className="flex-1">
                             <h3 className={`font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                               {task.title}
@@ -675,7 +774,7 @@ export default function Agenda() {
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-1">
                             <Button variant="ghost" size="sm" onClick={() => setSelectedTask(task)}>
                               <Edit className="h-4 w-4" />
@@ -694,391 +793,6 @@ export default function Agenda() {
           </Tabs>
         </div>
       </div>
-    </div>
-  );
-}
-
-  };
-
-  const getTasksForWeek = (date: Date) => {
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - date.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    return tasks.filter(task => {
-      if (!task.scheduled_date) return false;
-      const taskDate = new Date(task.scheduled_date);
-      return taskDate >= startOfWeek && taskDate <= endOfWeek;
-    });
-  };
-
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.objective?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const todayTasks = getTasksForDate(new Date());
-  const upcomingTasks = tasks.filter(task => {
-    if (!task.scheduled_date) return false;
-    const taskDate = new Date(task.scheduled_date);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    return taskDate > today && task.status === 'pending';
-  }).slice(0, 5);
-
-  const completedToday = todayTasks.filter(t => t.status === 'completed').length;
-  const pendingToday = todayTasks.filter(t => t.status === 'pending').length;
-  const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status === 'pending').length;
-
-  const toggleTaskStatus = async (taskId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-    try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: newStatus })
-        .eq('id', taskId);
-
-      if (error) throw error;
-
-      setTasks(tasks.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
-      ));
-    } catch (error) {
-      console.error('Error updating task:', error);
-    }
-  };
-
-  const selectedDateTasks = tasks.filter(task => {
-    if (!selectedDate) return false;
-    const taskDate = new Date(task.due_date);
-    return taskDate.toDateString() === selectedDate.toDateString();
-  });
-
-  const todayTasks = tasks.filter(task => {
-    const today = new Date();
-    const taskDate = new Date(task.due_date);
-    return taskDate.toDateString() === today.toDateString();
-  });
-
-  const completedTasksToday = todayTasks.filter(task => task.status === 'completed').length;
-  const totalTasksToday = todayTasks.length;
-  const completionRate = totalTasksToday > 0 ? (completedTasksToday / totalTasksToday) * 100 : 0;
-
-if (isLoading) {
-    return (
-      <div className="flex h-screen bg-background">
-        <Sidebar />
-        <main className="flex-1 overflow-auto flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Chaje tach yo...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
-        <div className="container mx-auto p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Ajanda & Tach</h1>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvo tach
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Ajoute nouvo tach</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">Tit tach la</Label>
-                    <Input
-                      id="title"
-                      value={newTask.title}
-                      onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                      placeholder="Egzanp: Reyinyon ak kliyan"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Deskripsyon</Label>
-                    <Textarea
-                      id="description"
-                      value={newTask.description}
-                      onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-                      placeholder="Deskripsyon tach la..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="due_date">Dat</Label>
-                      <Input
-                        id="due_date"
-                        type="date"
-                        value={newTask.due_date}
-                        onChange={(e) => setNewTask({...newTask, due_date: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="due_time">Lè</Label>
-                      <Input
-                        id="due_time"
-                        type="time"
-                        value={newTask.due_time}
-                        onChange={(e) => setNewTask({...newTask, due_time: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="priority">Priyorite</Label>
-                    <Select value={newTask.priority} onValueChange={(value) => setNewTask({...newTask, priority: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chwazi priyorite" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Ba</SelectItem>
-                        <SelectItem value="medium">Mwayen</SelectItem>
-                        <SelectItem value="high">Wo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Kategori</Label>
-                    <Input
-                      id="category"
-                      value={newTask.category}
-                      onChange={(e) => setNewTask({...newTask, category: e.target.value})}
-                      placeholder="travay, pèsonèl, sante..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="location">Kote</Label>
-                    <Input
-                      id="location"
-                      value={newTask.location}
-                      onChange={(e) => setNewTask({...newTask, location: e.target.value})}
-                      placeholder="Biwo a, kay la..."
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="is_recurring" 
-                      checked={newTask.is_recurring}
-                      onCheckedChange={(checked) => setNewTask({...newTask, is_recurring: checked as boolean})}
-                    />
-                    <Label htmlFor="is_recurring">Tach rekuran</Label>
-                  </div>
-                  <Button onClick={addTask} className="w-full">
-                    Ajoute tach la
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Calendar Section */}
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5" />
-                  Kalandriye
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-md border"
-                />
-
-                <div className="mt-4 space-y-2">
-                  <h3 className="font-semibold">
-                    Tach yo {selectedDate ? selectedDate.toLocaleDateString() : 'jodi a'}
-                  </h3>
-                  <div className="space-y-1">
-                    {selectedDateTasks.slice(0, 5).map((task) => (
-                      <div key={task.id} className="flex items-center gap-2 p-2 bg-muted rounded">
-                        <button onClick={() => toggleTaskStatus(task.id, task.status)}>
-                          {task.status === 'completed' ? 
-                            <CheckCircle className="h-4 w-4 text-green-500" /> : 
-                            <Circle className="h-4 w-4" />
-                          }
-                        </button>
-                        <span className={`text-sm flex-1 ${task.status === 'completed' ? 'line-through' : ''}`}>
-                          {task.title}
-                        </span>
-                        <Badge 
-                          variant={task.priority === 'high' ? 'destructive' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {task.priority}
-                        </Badge>
-                      </div>
-                    ))}
-                    {selectedDateTasks.length === 0 && (
-                      <p className="text-sm text-muted-foreground">Pa gen tach yo jou sa a</p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tasks Section */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Tach jodi a</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{totalTasksToday}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {completedTasksToday} fèt, {totalTasksToday - completedTasksToday} rete
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Pwodiktivite</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{Math.round(completionRate)}%</div>
-                    <p className="text-xs text-muted-foreground">To konpletasyon jodi a</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Total tach</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{tasks.length}</div>
-                    <p className="text-xs text-muted-foreground">Nan sistèm nan</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Tasks List */}
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Input
-                    placeholder="Chèche tach..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtre
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  {tasks
-                    .filter(task => 
-                      task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      task.description?.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((task) => (
-                      <Card key={task.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-3 flex-1">
-                              <button 
-                                className="mt-1"
-                                onClick={() => toggleTaskStatus(task.id, task.status)}
-                              >
-                                {task.status === 'completed' ? 
-                                  <CheckCircle className="h-5 w-5 text-green-500" /> : 
-                                  <Circle className="h-5 w-5 text-muted-foreground" />
-                                }
-                              </button>
-
-                              <div className="flex-1">
-                                <h3 className={`font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
-                                  {task.title}
-                                </h3>
-                                {task.description && (
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {task.description}
-                                  </p>
-                                )}
-
-                                <div className="flex items-center gap-4 mt-2">
-                                  {task.due_date && (
-                                    <div className="flex items-center gap-1">
-                                      <CalendarDays className="h-4 w-4" />
-                                      <span className="text-sm">
-                                        {new Date(task.due_date).toLocaleDateString()}
-                                        {task.due_time && ` ${task.due_time}`}
-                                      </span>
-                                    </div>
-                                  )}
-
-                                  {task.location && (
-                                    <div className="flex items-center gap-1">
-                                      <MapPin className="h-4 w-4" />
-                                      <span className="text-sm">{task.location}</span>
-                                    </div>
-                                  )}
-
-                                  {task.is_recurring && (
-                                    <div className="flex items-center gap-1">
-                                      <Repeat className="h-4 w-4" />
-                                      <span className="text-sm">Repete</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <Badge 
-                                variant={
-                                  task.priority === 'high' ? 'destructive' : 
-                                  task.priority === 'medium' ? 'default' : 'secondary'
-                                }
-                              >
-                                <Flame className="h-3 w-3 mr-1" />
-                                {task.priority}
-                              </Badge>
-
-                              {task.category && (
-                                <Badge variant="outline">
-                                  {task.category}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                </div>
-
-                {tasks.length === 0 && (
-                  <div className="text-center py-12">
-                    <Clock className="h-24 w-24 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Pa gen tach ankò</h3>
-                    <p className="text-muted-foreground">Kòmanse ak ajoute premye tach ou a.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
     </div>
   );
 }

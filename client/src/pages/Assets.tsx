@@ -166,7 +166,7 @@ export default function Assets() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
@@ -179,7 +179,7 @@ export default function Assets() {
                 Jere ak swiv tout bien ou yo
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -325,7 +325,7 @@ export default function Assets() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -379,7 +379,7 @@ export default function Assets() {
                   const IconComponent = categoryIcons[asset.category || 'documents'] || FileText;
                   const isWarrantyExpiring = asset.warranty_end_date && 
                     new Date(asset.warranty_end_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                  
+
                   return (
                     <Card key={asset.id} className={`hover:shadow-md transition-shadow ${isWarrantyExpiring ? 'border-orange-200' : ''}`}>
                       <CardHeader className="pb-3">
@@ -406,7 +406,7 @@ export default function Assets() {
                             {asset.description}
                           </p>
                         )}
-                        
+
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             {asset.current_value && (
@@ -450,7 +450,7 @@ export default function Assets() {
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="flex justify-between mt-4">
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-1" />
@@ -478,7 +478,7 @@ export default function Assets() {
                   const IconComponent = categoryIcons[asset.category || 'documents'] || FileText;
                   const isWarrantyExpiring = asset.warranty_end_date && 
                     new Date(asset.warranty_end_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                  
+
                   return (
                     <Card key={asset.id} className={`hover:shadow-md transition-shadow ${isWarrantyExpiring ? 'border-orange-200' : ''}`}>
                       <CardContent className="p-4">
@@ -487,7 +487,7 @@ export default function Assets() {
                             <div className="p-3 bg-primary/10 rounded-lg">
                               <IconComponent className="h-6 w-6 text-primary" />
                             </div>
-                            
+
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold text-lg">{asset.name}</h3>
@@ -497,11 +497,11 @@ export default function Assets() {
                                   </Badge>
                                 )}
                               </div>
-                              
+
                               <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
                                 {asset.description || 'Pa gen deskripsyon'}
                               </p>
-                              
+
                               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                                 {asset.current_value && (
                                   <div className="flex items-center gap-1">
@@ -524,7 +524,7 @@ export default function Assets() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4 mr-1" />
@@ -545,7 +545,7 @@ export default function Assets() {
                   const categoryAssets = assets.filter(asset => asset.category === key);
                   const categoryValue = categoryAssets.reduce((sum, asset) => 
                     sum + (asset.current_value || asset.purchase_price || 0), 0);
-                  
+
                   const categoryLabels: Record<string, string> = {
                     real_estate: "Tè ak Kay",
                     technology: "Teknoloji",
@@ -555,7 +555,7 @@ export default function Assets() {
                     art: "Ò ak dekorasyon",
                     documents: "Dokiman"
                   };
-                  
+
                   return (
                     <Card key={key} className="hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-6 text-center">
@@ -572,7 +572,7 @@ export default function Assets() {
                               ${categoryValue.toLocaleString()}
                             </p>
                           </div>
-                          
+
                           {categoryAssets.length > 0 && (
                             <div className="w-full text-left">
                               <p className="text-xs text-muted-foreground mb-2">Dènye yo:</p>
@@ -610,7 +610,7 @@ export default function Assets() {
                           new Date(asset.warranty_end_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
                         const insuranceExpiring = asset.insurance_expiry_date && 
                           new Date(asset.insurance_expiry_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                        
+
                         return (
                           <div key={asset.id} className={`p-4 rounded-lg border ${
                             warrantyExpiring || insuranceExpiring ? 'bg-orange-50 border-orange-200' : 'bg-muted/50'
@@ -639,7 +639,7 @@ export default function Assets() {
                           </div>
                         );
                       })}
-                    
+
                     {assets.filter(asset => asset.warranty_end_date || asset.insurance_expiry_date).length === 0 && (
                       <div className="text-center py-12">
                         <Shield className="h-24 w-24 text-muted-foreground mx-auto mb-4" />
@@ -665,15 +665,15 @@ export default function Assets() {
       setNewAsset({
         name: "",
         category: "",
-        purchase_price: 0,
-        current_value: 0,
-        purchase_date: "",
-        location: "",
         description: "",
+        purchase_price: null,
+        current_value: null,
+        purchase_date: "",
         warranty_end_date: "",
         insurance_expiry_date: "",
-        serial_number: "",
-        notes: ""
+        location: "",
+        condition: "good",
+        maintenance_schedule: ""
       });
       setIsAddDialogOpen(false);
     } catch (error) {
@@ -851,8 +851,8 @@ export default function Assets() {
                   <div>
                     <Label htmlFor="value">Valè estimatif ($)</Label>
                     <Input
-                      id="value"
-                      type="number"
+                      id="value"```text
+      type="number"
                       value={newAsset.estimated_value}
                       onChange={(e) => setNewAsset({...newAsset, estimated_value: parseFloat(e.target.value) || 0})}
                       placeholder="1500"

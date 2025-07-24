@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,6 +109,7 @@ export default function Projects() {
     tags: "",
     is_private: false
   });
+    const [location, setLocation] = useState("/");
 
   useEffect(() => {
     fetchProjects();
@@ -235,7 +235,7 @@ export default function Projects() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border/50 bg-card/30 backdrop-blur-sm">
@@ -248,7 +248,7 @@ export default function Projects() {
                 Jere ak swiv pwogre pwojè ou yo
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -380,7 +380,7 @@ export default function Projects() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -436,7 +436,7 @@ export default function Projects() {
                   const category = projectCategories[project.category as keyof typeof projectCategories];
                   const IconComponent = category?.icon || FolderOpen;
                   const isOverdue = project.deadline && new Date(project.deadline) < new Date() && project.status !== 'completed';
-                  
+
                   return (
                     <Card key={project.id} className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-red-200' : ''}`}>
                       <CardHeader className="pb-3">
@@ -466,7 +466,7 @@ export default function Projects() {
                             {project.short_description}
                           </p>
                         )}
-                        
+
                         <div className="space-y-3">
                           <div>
                             <div className="flex justify-between text-sm mb-1">
@@ -475,7 +475,7 @@ export default function Projects() {
                             </div>
                             <Progress value={project.progress} className="h-2" />
                           </div>
-                          
+
                           <div className="flex items-center justify-between text-sm text-muted-foreground">
                             {project.deadline && (
                               <div className={`flex items-center gap-1 ${isOverdue ? 'text-red-500' : ''}`}>
@@ -514,16 +514,20 @@ export default function Projects() {
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="flex justify-between mt-4">
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-1" />
                             Wè
                           </Button>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setLocation(`/projects/${project.id}`)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                             <Button variant="ghost" size="sm">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -542,7 +546,7 @@ export default function Projects() {
                   const category = projectCategories[project.category as keyof typeof projectCategories];
                   const IconComponent = category?.icon || FolderOpen;
                   const isOverdue = project.deadline && new Date(project.deadline) < new Date() && project.status !== 'completed';
-                  
+
                   return (
                     <Card key={project.id} className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-red-200' : ''}`}>
                       <CardContent className="p-4">
@@ -551,7 +555,7 @@ export default function Projects() {
                             <div className={`p-3 rounded-lg ${category?.color || 'bg-gray-500'} bg-opacity-10`}>
                               <IconComponent className={`h-6 w-6 ${category?.color || 'text-gray-500'}`} />
                             </div>
-                            
+
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold text-lg">{project.name}</h3>
@@ -563,11 +567,11 @@ export default function Projects() {
                                 </Badge>
                                 {isOverdue && <AlertTriangle className="h-4 w-4 text-red-500" />}
                               </div>
-                              
+
                               <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
                                 {project.short_description}
                               </p>
-                              
+
                               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                   <BarChart3 className="h-4 w-4" />
@@ -588,7 +592,7 @@ export default function Projects() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <div className="w-32">
                               <Progress value={project.progress} className="h-2" />
@@ -621,7 +625,7 @@ export default function Projects() {
                         {statusProjects.map((project) => {
                           const category = projectCategories[project.category as keyof typeof projectCategories];
                           const IconComponent = category?.icon || FolderOpen;
-                          
+
                           return (
                             <Card key={project.id} className="p-3 hover:shadow-md transition-shadow cursor-pointer">
                               <div className="flex items-start gap-2 mb-2">
@@ -635,7 +639,7 @@ export default function Projects() {
                                   )}
                                 </div>
                               </div>
-                              
+
                               <div className="space-y-2">
                                 <Progress value={project.progress} className="h-1" />
                                 <div className="flex justify-between text-xs text-muted-foreground">
