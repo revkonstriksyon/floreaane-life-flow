@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,30 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Home, 
   Laptop, 
-  Shirt, 
   Car, 
-  Hammer, 
-  Image, 
-  FileText, 
-  Plus, 
-  Search, 
-  Filter, 
-  DollarSign,
-  Calendar,
-  AlertTriangle,
-  TrendingUp,
-  Download,
-  Upload,
-  Bell,
-  Shield,
+  Wrench,
+  Image as ImageIcon,
+  FileText,
+  Plus,
+  Search,
+  Filter,
   Eye,
   Edit,
-  Trash2
+  AlertTriangle,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Smartphone,
+  Camera,
+  Shirt,
+  Watch,
+  Building,
+  Key,
+  Shield
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Asset {
   id: string;
@@ -72,6 +77,21 @@ export default function Assets() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newAsset, setNewAsset] = useState({
+    name: "",
+    category: "",
+    estimated_value: 0,
+    purchase_date: "",
+    condition: "",
+    location: "",
+    description: "",
+    warranty_expiry: "",
+    insurance_expiry: ""
+  });
 
   useEffect(() => {
     fetchAssets();
@@ -98,22 +118,69 @@ export default function Assets() {
     }
   };
 
-  const filteredAssets = assets.filter(asset =>
+  const addAsset = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .insert([newAsset])
+        .select();
+
+      if (error) throw error;
+
+      setAssets([...assets, ...(data || [])]);
+      setNewAsset({
+        name: "",
+        category: "",
+        estimated_value: 0,
+        purchase_date: "",
+        condition: "",
+        location: "",
+        description: "",
+        warranty_expiry: "",
+        insurance_expiry: ""
+      });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding asset:', error);
+    }
+  };
+
+  const filteredAssets = assets.filter(asset => {
+    const matchesSearch = asset.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || asset.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalValue = assets.reduce((sum, asset) => sum + (asset.estimated_value || 0), 0);
+  const categoryIcons = {
+    property: Home,
+    technology: Laptop,
+    transport: Car,
+    tools: Wrench,
+    personal: Shirt,
+    documents: FileText,
+    art: ImageIcon,
+    jewelry: Watch,
+    electronics: Smartphone
+  };
+
+  const filteredAssetsSearch = assets.filter(asset =>
     asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     asset.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalValue = assets.reduce((sum, asset) => sum + (asset.current_value || 0), 0);
+  const totalValueOld = assets.reduce((sum, asset) => sum + (asset.current_value || 0), 0);
   const totalPurchaseValue = assets.reduce((sum, asset) => sum + (asset.purchase_price || 0), 0);
-  const valueChange = totalValue - totalPurchaseValue;
+  const valueChange = totalValueOld - totalPurchaseValue;
 
   const getPriorityColor = (dueDate: string | null) => {
     if (!dueDate) return "bg-muted text-muted-foreground";
-    
+
     const today = new Date();
     const due = new Date(dueDate);
     const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysUntilDue < 30) return "bg-destructive/10 text-destructive border-destructive/20";
     if (daysUntilDue < 90) return "bg-warning/10 text-warning border-warning/20";
     return "bg-green-500/10 text-green-500 border-green-500/20";
@@ -133,10 +200,24 @@ export default function Assets() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <main className="flex-1 overflow-auto flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Chaje byen yo...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b">
@@ -145,10 +226,102 @@ export default function Assets() {
               <h1 className="text-3xl font-bold">Jesyon Byen</h1>
               <p className="text-muted-foreground">Sivèy ak jeré tout byen ou yo</p>
             </div>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Ajoute Byen
-            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajoute Byen
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Ajoute nouvo byen</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Non byen an</Label>
+                    <Input
+                      id="name"
+                      value={newAsset.name}
+                      onChange={(e) => setNewAsset({...newAsset, name: e.target.value})}
+                      placeholder="Egzanp: MacBook Pro"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Kategori</Label>
+                    <Select value={newAsset.category} onValueChange={(value) => setNewAsset({...newAsset, category: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chwazi kategori" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="property">Byen imobilye</SelectItem>
+                        <SelectItem value="technology">Teknoloji</SelectItem>
+                        <SelectItem value="transport">Transpò</SelectItem>
+                        <SelectItem value="tools">Zouti</SelectItem>
+                        <SelectItem value="personal">Pèsonèl</SelectItem>
+                        <SelectItem value="electronics">Elektronik</SelectItem>
+                        <SelectItem value="jewelry">Bijou</SelectItem>
+                        <SelectItem value="documents">Dokiman</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="value">Valè estimatif ($)</Label>
+                    <Input
+                      id="value"
+                      type="number"
+                      value={newAsset.estimated_value}
+                      onChange={(e) => setNewAsset({...newAsset, estimated_value: parseFloat(e.target.value) || 0})}
+                      placeholder="1500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="purchase_date">Dat acha</Label>
+                    <Input
+                      id="purchase_date"
+                      type="date"
+                      value={newAsset.purchase_date}
+                      onChange={(e) => setNewAsset({...newAsset, purchase_date: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="condition">Kondisyon</Label>
+                    <Select value={newAsset.condition} onValueChange={(value) => setNewAsset({...newAsset, condition: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chwazi kondisyon" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="excellent">Eksèlan</SelectItem>
+                        <SelectItem value="good">Bon</SelectItem>
+                        <SelectItem value="fair">Akseptab</SelectItem>
+                        <SelectItem value="poor">Move</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Kote li ye</Label>
+                    <Input
+                      id="location"
+                      value={newAsset.location}
+                      onChange={(e) => setNewAsset({...newAsset, location: e.target.value})}
+                      placeholder="Kay la, biwo a..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Deskripsyon</Label>
+                    <Textarea
+                      id="description"
+                      value={newAsset.description}
+                      onChange={(e) => setNewAsset({...newAsset, description: e.target.value})}
+                      placeholder="Ti deskripsyon sou byen an..."
+                    />
+                  </div>
+                  <Button onClick={addAsset} className="w-full">
+                    Ajoute byen an
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="flex items-center gap-4 mb-6">
@@ -237,7 +410,7 @@ export default function Assets() {
                 <TabsTrigger value="list">Lis</TabsTrigger>
                 <TabsTrigger value="categories">Kategori</TabsTrigger>
               </TabsList>
-              
+
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -252,9 +425,9 @@ export default function Assets() {
 
             <TabsContent value="grid">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAssets.map((asset) => {
+                {filteredAssetsSearch.map((asset) => {
                   const IconComponent = categoryIcons[asset.category || 'documents'] || FileText;
-                  
+
                   return (
                     <Card key={asset.id} className="hover:shadow-lg transition-shadow">
                       <CardHeader className="pb-3">
@@ -289,21 +462,21 @@ export default function Assets() {
                             <span className="text-muted-foreground">Valè Kounye a:</span>
                             <span className="font-semibold">${asset.current_value?.toLocaleString() || '0'}</span>
                           </div>
-                          
+
                           {asset.location && (
                             <div className="flex items-center gap-2 text-sm">
                               <Home className="h-4 w-4 text-muted-foreground" />
                               <span>{asset.location}</span>
                             </div>
                           )}
-                          
+
                           {asset.purchase_date && (
                             <div className="flex items-center gap-2 text-sm">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span>Achte: {new Date(asset.purchase_date).toLocaleDateString('fr-FR')}</span>
                             </div>
                           )}
-                          
+
                           {asset.warranty_end_date && (
                             <div className="flex items-center gap-2 text-sm text-orange-500">
                               <AlertTriangle className="h-4 w-4" />
@@ -324,7 +497,7 @@ export default function Assets() {
                   const IconComponent = categoryIcons[key as keyof typeof categoryIcons];
                   const categoryAssets = assets.filter(asset => asset.category === key);
                   const categoryValue = categoryAssets.reduce((sum, asset) => sum + (asset.current_value || 0), 0);
-                  
+
                   return (
                     <Card key={key} className="hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-6 text-center">

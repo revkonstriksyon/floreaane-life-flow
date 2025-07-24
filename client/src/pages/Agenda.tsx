@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,74 +6,51 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
-import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Calendar as CalendarIcon, 
-  Clock, 
-  CheckCircle2, 
-  Circle, 
-  Star,
+  CalendarDays, 
+  Clock,
+  Plus,
+  Filter,
+  CheckCircle,
+  Circle,
+  AlertCircle,
   MapPin,
-  User,
+  Target,
+  Flame,
+  Repeat,
+  Edit,
+  Trash2,
   Brain,
-  BarChart3
+  Play,
+  Pause
 } from "lucide-react";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string | null;
-  priority: string | null;
-  category: string | null;
-  due_date: string | null;
-  start_date: string | null;
-  duration_minutes: number | null;
-  project_id: string | null;
-  related_contact_id: string | null;
-  related_asset_id: string | null;
-  tags: string[] | null;
-  is_recurring: boolean | null;
-  created_at: string | null;
-  user_id: string | null;
-}
-
-const priorityColors: Record<string, string> = {
-  high: "bg-destructive/10 text-destructive border-destructive/20",
-  medium: "bg-warning/10 text-warning border-warning/20",
-  low: "bg-muted text-muted-foreground"
-};
-
-const statusLabels: Record<string, string> = {
-  pending: "Rete",
-  in_progress: "Nan Travay", 
-  completed: "Fini",
-  cancelled: "Anile"
-};
-
-const categoryColors: Record<string, string> = {
-  personal: "bg-blue-100 text-blue-800",
-  work: "bg-green-100 text-green-800",
-  health: "bg-red-100 text-red-800",
-  education: "bg-purple-100 text-purple-800",
-  social: "bg-pink-100 text-pink-800"
-};
-
-const timeSlots = Array.from({ length: 24 }, (_, i) => {
-  const hour = i.toString().padStart(2, '0');
-  return `${hour}:00`;
-});
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Agenda() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeView, setActiveView] = useState("calendar");
-  const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [view, setView] = useState("day");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    due_date: "",
+    due_time: "",
+    priority: "medium",
+    status: "pending",
+    category: "",
+    location: "",
+    estimated_duration: 60,
+    is_recurring: false,
+    recurring_pattern: ""
+  });
 
   useEffect(() => {
     fetchTasks();
@@ -82,410 +58,396 @@ export default function Agenda() {
 
   const fetchTasks = async () => {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('due_date', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching tasks:', error);
-        return;
-      }
-
+      if (error) throw error;
       setTasks(data || []);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching tasks:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const toggleTask = async (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+  const addTask = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([newTask])
+        .select();
 
-    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-    
-    const { error } = await supabase
-      .from('tasks')
-      .update({ status: newStatus })
-      .eq('id', taskId);
+      if (error) throw error;
 
-    if (error) {
+      setTasks([...tasks, ...(data || [])]);
+      setNewTask({
+        title: "",
+        description: "",
+        due_date: "",
+        due_time: "",
+        priority: "medium",
+        status: "pending",
+        category: "",
+        location: "",
+        estimated_duration: 60,
+        is_recurring: false,
+        recurring_pattern: ""
+      });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  };
+
+  const toggleTaskStatus = async (taskId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      setTasks(tasks.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      ));
+    } catch (error) {
       console.error('Error updating task:', error);
-      return;
     }
-
-    setTasks(tasks.map(t => 
-      t.id === taskId ? { ...t, status: newStatus } : t
-    ));
   };
 
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const todayTasks = filteredTasks.filter(task => {
-    if (!task.due_date) return false;
+  const selectedDateTasks = tasks.filter(task => {
+    if (!selectedDate) return false;
     const taskDate = new Date(task.due_date);
+    return taskDate.toDateString() === selectedDate.toDateString();
+  });
+
+  const todayTasks = tasks.filter(task => {
     const today = new Date();
+    const taskDate = new Date(task.due_date);
     return taskDate.toDateString() === today.toDateString();
   });
 
-  const upcomingTasks = filteredTasks.filter(task => {
-    if (!task.due_date) return false;
-    const taskDate = new Date(task.due_date);
-    const today = new Date();
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-    return taskDate >= tomorrow;
-  });
+  const completedTasksToday = todayTasks.filter(task => task.status === 'completed').length;
+  const totalTasksToday = todayTasks.length;
+  const completionRate = totalTasksToday > 0 ? (completedTasksToday / totalTasksToday) * 100 : 0;
 
-  const overdueTasks = filteredTasks.filter(task => {
-    if (!task.due_date || task.status === 'completed') return false;
-    const taskDate = new Date(task.due_date);
-    const today = new Date();
-    return taskDate < today;
-  });
-
-  const completedTasks = filteredTasks.filter(task => task.status === 'completed').length;
-  const pendingTasks = filteredTasks.filter(task => task.status === 'pending').length;
-
-  const getPriorityColor = (priority: string | null) => {
-    return priorityColors[priority || 'low'] || priorityColors.low;
-  };
-
-  const getStatusIcon = (status: string | null) => {
-    return status === "completed" ? CheckCircle2 : Circle;
-  };
-
-  if (loading) {
+if (isLoading) {
     return (
       <div className="flex h-screen bg-background">
-        <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-        <div className="flex-1 flex items-center justify-center">
+        <Sidebar />
+        <main className="flex-1 overflow-auto flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-            <p className="mt-4">Ap chèche tach yo...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Chaje tach yo...</p>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={setSidebarCollapsed} />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold">Ajenda & Tach</h1>
-              <p className="text-muted-foreground">Jesyon tan ak tach yo</p>
-            </div>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nouvo Tach
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Chèche tach yo..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtre
-            </Button>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+      <Sidebar />
+      <main className="flex-1 overflow-auto">
+        <div className="container mx-auto p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Ajanda & Tach</h1>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvo tach
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Ajoute nouvo tach</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Jodi a</p>
-                    <p className="text-2xl font-bold">{todayTasks.length}</p>
+                    <Label htmlFor="title">Tit tach la</Label>
+                    <Input
+                      id="title"
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                      placeholder="Egzanp: Reyinyon ak kliyan"
+                    />
                   </div>
-                  <CalendarIcon className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Rete</p>
-                    <p className="text-2xl font-bold">{pendingTasks}</p>
+                    <Label htmlFor="description">Deskripsyon</Label>
+                    <Textarea
+                      id="description"
+                      value={newTask.description}
+                      onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                      placeholder="Deskripsyon tach la..."
+                    />
                   </div>
-                  <Circle className="h-8 w-8 text-orange-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Fini</p>
-                    <p className="text-2xl font-bold">{completedTasks}</p>
-                  </div>
-                  <CheckCircle2 className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Anreta</p>
-                    <p className="text-2xl font-bold text-red-500">{overdueTasks.length}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-hidden">
-          <Tabs value={activeView} onValueChange={setActiveView} className="h-full flex flex-col">
-            <TabsList className="m-6 mb-0">
-              <TabsTrigger value="calendar" className="gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                Kalandriye
-              </TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-2">
-                <Clock className="h-4 w-4" />
-                Timeline
-              </TabsTrigger>
-              <TabsTrigger value="kanban" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Kanban
-              </TabsTrigger>
-              <TabsTrigger value="ai" className="gap-2">
-                <Brain className="h-4 w-4" />
-                IA Sijesyon
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="calendar" className="flex-1 p-6 overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-                {/* Calendar */}
-                <div className="lg:col-span-1">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Kalandriye</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => date && setSelectedDate(date)}
-                        className="rounded-md border"
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="due_date">Dat</Label>
+                      <Input
+                        id="due_date"
+                        type="date"
+                        value={newTask.due_date}
+                        onChange={(e) => setNewTask({...newTask, due_date: e.target.value})}
                       />
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <div>
+                      <Label htmlFor="due_time">Lè</Label>
+                      <Input
+                        id="due_time"
+                        type="time"
+                        value={newTask.due_time}
+                        onChange={(e) => setNewTask({...newTask, due_time: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="priority">Priyorite</Label>
+                    <Select value={newTask.priority} onValueChange={(value) => setNewTask({...newTask, priority: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chwazi priyorite" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Ba</SelectItem>
+                        <SelectItem value="medium">Mwayen</SelectItem>
+                        <SelectItem value="high">Wo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Kategori</Label>
+                    <Input
+                      id="category"
+                      value={newTask.category}
+                      onChange={(e) => setNewTask({...newTask, category: e.target.value})}
+                      placeholder="travay, pèsonèl, sante..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Kote</Label>
+                    <Input
+                      id="location"
+                      value={newTask.location}
+                      onChange={(e) => setNewTask({...newTask, location: e.target.value})}
+                      placeholder="Biwo a, kay la..."
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="is_recurring" 
+                      checked={newTask.is_recurring}
+                      onCheckedChange={(checked) => setNewTask({...newTask, is_recurring: checked as boolean})}
+                    />
+                    <Label htmlFor="is_recurring">Tach rekuran</Label>
+                  </div>
+                  <Button onClick={addTask} className="w-full">
+                    Ajoute tach la
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendar Section */}
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5" />
+                  Kalandriye
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border"
+                />
+
+                <div className="mt-4 space-y-2">
+                  <h3 className="font-semibold">
+                    Tach yo {selectedDate ? selectedDate.toLocaleDateString() : 'jodi a'}
+                  </h3>
+                  <div className="space-y-1">
+                    {selectedDateTasks.slice(0, 5).map((task) => (
+                      <div key={task.id} className="flex items-center gap-2 p-2 bg-muted rounded">
+                        <button onClick={() => toggleTaskStatus(task.id, task.status)}>
+                          {task.status === 'completed' ? 
+                            <CheckCircle className="h-4 w-4 text-green-500" /> : 
+                            <Circle className="h-4 w-4" />
+                          }
+                        </button>
+                        <span className={`text-sm flex-1 ${task.status === 'completed' ? 'line-through' : ''}`}>
+                          {task.title}
+                        </span>
+                        <Badge 
+                          variant={task.priority === 'high' ? 'destructive' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {task.priority}
+                        </Badge>
+                      </div>
+                    ))}
+                    {selectedDateTasks.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Pa gen tach yo jou sa a</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tasks Section */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Tach jodi a</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{totalTasksToday}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {completedTasksToday} fèt, {totalTasksToday - completedTasksToday} rete
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Pwodiktivite</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{Math.round(completionRate)}%</div>
+                    <p className="text-xs text-muted-foreground">To konpletasyon jodi a</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Total tach</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{tasks.length}</div>
+                    <p className="text-xs text-muted-foreground">Nan sistèm nan</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Tasks List */}
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <Input
+                    placeholder="Chèche tach..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtre
+                  </Button>
                 </div>
 
-                {/* Tasks List */}
-                <div className="lg:col-span-3 space-y-6 overflow-y-auto">
-                  {/* Today's Tasks */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tach Jodi a</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {todayTasks.map((task) => {
-                          const StatusIcon = getStatusIcon(task.status);
-                          return (
-                            <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg border hover:shadow-sm transition-shadow">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleTask(task.id)}
-                                className="p-0 h-auto"
+                <div className="space-y-4">
+                  {tasks
+                    .filter(task => 
+                      task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      task.description?.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((task) => (
+                      <Card key={task.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-3 flex-1">
+                              <button 
+                                className="mt-1"
+                                onClick={() => toggleTaskStatus(task.id, task.status)}
                               >
-                                <StatusIcon className={`h-5 w-5 ${task.status === 'completed' ? 'text-green-500' : 'text-muted-foreground'}`} />
-                              </Button>
-                              <div className="flex-1">
-                                <h4 className={`font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
-                                  {task.title}
-                                </h4>
-                                {task.description && (
-                                  <p className="text-sm text-muted-foreground">{task.description}</p>
-                                )}
-                                <div className="flex items-center gap-2 mt-1">
-                                  {task.priority && (
-                                    <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                                      {task.priority === 'high' ? 'Wo' : task.priority === 'medium' ? 'Mwayen' : 'Ba'}
-                                    </Badge>
-                                  )}
-                                  {task.category && (
-                                    <Badge variant="outline" className={categoryColors[task.category] || categoryColors.personal}>
-                                      {task.category}
-                                    </Badge>
-                                  )}
-                                  {task.duration_minutes && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                      <Clock className="h-3 w-3" />
-                                      {task.duration_minutes}min
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {todayTasks.length === 0 && (
-                          <p className="text-center text-muted-foreground py-8">
-                            Pa gen tach pou jodi a
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                                {task.status === 'completed' ? 
+                                  <CheckCircle className="h-5 w-5 text-green-500" /> : 
+                                  <Circle className="h-5 w-5 text-muted-foreground" />
+                                }
+                              </button>
 
-                  {/* Upcoming Tasks */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tach Ki Vini</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {upcomingTasks.slice(0, 10).map((task) => {
-                          const StatusIcon = getStatusIcon(task.status);
-                          return (
-                            <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg border hover:shadow-sm transition-shadow">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleTask(task.id)}
-                                className="p-0 h-auto"
-                              >
-                                <StatusIcon className={`h-5 w-5 ${task.status === 'completed' ? 'text-green-500' : 'text-muted-foreground'}`} />
-                              </Button>
                               <div className="flex-1">
-                                <h4 className={`font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                                <h3 className={`font-semibold ${task.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                                   {task.title}
-                                </h4>
-                                {task.due_date && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {new Date(task.due_date).toLocaleDateString('fr-FR')}
+                                </h3>
+                                {task.description && (
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {task.description}
                                   </p>
                                 )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {upcomingTasks.length === 0 && (
-                          <p className="text-center text-muted-foreground py-8">
-                            Pa gen tach ki vini
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
 
-                  {/* Overdue Tasks */}
-                  {overdueTasks.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-red-600">Tach Anreta</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {overdueTasks.map((task) => {
-                            const StatusIcon = getStatusIcon(task.status);
-                            return (
-                              <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg border border-red-200 bg-red-50 hover:shadow-sm transition-shadow">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleTask(task.id)}
-                                  className="p-0 h-auto"
-                                >
-                                  <StatusIcon className="h-5 w-5 text-red-500" />
-                                </Button>
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-red-700">{task.title}</h4>
+                                <div className="flex items-center gap-4 mt-2">
                                   {task.due_date && (
-                                    <p className="text-sm text-red-600">
-                                      Dèt: {new Date(task.due_date).toLocaleDateString('fr-FR')}
-                                    </p>
+                                    <div className="flex items-center gap-1">
+                                      <CalendarDays className="h-4 w-4" />
+                                      <span className="text-sm">
+                                        {new Date(task.due_date).toLocaleDateString()}
+                                        {task.due_time && ` ${task.due_time}`}
+                                      </span>
+                                    </div>
                                   )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="timeline" className="flex-1 p-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Timeline Jou a</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {timeSlots.map((time) => {
-                      const timeTaska = todayTasks.filter(task => {
-                        if (!task.start_date) return false;
-                        const taskTime = new Date(task.start_date).getHours();
-                        const slotTime = parseInt(time.split(':')[0]);
-                        return taskTime === slotTime;
-                      });
+                                  {task.location && (
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="h-4 w-4" />
+                                      <span className="text-sm">{task.location}</span>
+                                    </div>
+                                  )}
 
-                      return (
-                        <div key={time} className="grid grid-cols-12 gap-4 py-2 border-b border-muted">
-                          <div className="col-span-2 text-sm font-medium text-muted-foreground">
-                            {time}
-                          </div>
-                          <div className="col-span-10">
-                            {timeTaska.length > 0 ? (
-                              timeTaska.map(task => (
-                                <div key={task.id} className="p-2 bg-primary/10 rounded-md mb-1">
-                                  <div className="font-medium">{task.title}</div>
-                                  {task.duration_minutes && (
-                                    <div className="text-sm text-muted-foreground">
-                                      {task.duration_minutes} min
+                                  {task.is_recurring && (
+                                    <div className="flex items-center gap-1">
+                                      <Repeat className="h-4 w-4" />
+                                      <span className="text-sm">Repete</span>
                                     </div>
                                   )}
                                 </div>
-                              ))
-                            ) : (
-                              <div className="h-8"></div>
-                            )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={
+                                  task.priority === 'high' ? 'destructive' : 
+                                  task.priority === 'medium' ? 'default' : 'secondary'
+                                }
+                              >
+                                <Flame className="h-3 w-3 mr-1" />
+                                {task.priority}
+                              </Badge>
+
+                              {task.category && (
+                                <Badge variant="outline">
+                                  {task.category}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+
+                {tasks.length === 0 && (
+                  <div className="text-center py-12">
+                    <Clock className="h-24 w-24 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Pa gen tach ankò</h3>
+                    <p className="text-muted-foreground">Kòmanse ak ajoute premye tach ou a.</p>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
