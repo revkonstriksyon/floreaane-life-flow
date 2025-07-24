@@ -21,9 +21,9 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", href: "/", active: true },
-  { icon: Calendar, label: "Ajenda & Tach", href: "/agenda", badge: 5 },
-  { icon: FolderOpen, label: "Pwojè Mwen", href: "/projects", badge: 3 },
+  { icon: Home, label: "Dashboard", href: "/", active: false },
+  { icon: Calendar, label: "Ajenda & Tach", href: "/agenda", badge: 5, active: false },
+  { icon: FolderOpen, label: "Pwojè Mwen", href: "/projects", badge: 3, active: false },
   { icon: Package, label: "Sa M Posede", href: "/assets" },
   { icon: Users, label: "Relasyon", href: "/contacts", badge: 2 },
   { icon: DollarSign, label: "Finans", href: "/finances" },
@@ -40,9 +40,10 @@ const preferences = [
 interface SidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
+  currentPath?: string;
 }
 
-export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed = false, onToggle, currentPath = "/" }: SidebarProps) {
   return (
     <div className={cn(
       "flex flex-col h-screen bg-card/30 backdrop-blur-sm border-r border-border/50 transition-all duration-300",
@@ -93,18 +94,20 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
           )}
           
           <nav className="space-y-1">
-            {menuItems.map((item) => (
-              <Button
-                key={item.href}
-                variant={item.active ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start",
-                  collapsed ? "px-2" : "px-3",
-                  item.active && "bg-primary/10 text-primary border border-primary/20"
-                )}
-                asChild
-              >
-                <a href={item.href}>
+            {menuItems.map((item) => {
+              const isActive = currentPath === item.href;
+              return (
+                <Button
+                  key={item.href}
+                  variant={isActive ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start",
+                    collapsed ? "px-2" : "px-3",
+                    isActive && "bg-primary/10 text-primary border border-primary/20"
+                  )}
+                  asChild
+                >
+                  <a href={item.href}>
                   <item.icon className="h-4 w-4" />
                   {!collapsed && (
                     <>
@@ -119,9 +122,10 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
                       )}
                     </>
                   )}
-                </a>
-              </Button>
-            ))}
+                  </a>
+                </Button>
+              );
+            })}
           </nav>
         </div>
 

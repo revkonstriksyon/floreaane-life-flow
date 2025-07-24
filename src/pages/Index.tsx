@@ -21,10 +21,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-bg flex">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-      />
+        <Sidebar 
+          collapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          currentPath="/"
+        />
       
       <main className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto">
