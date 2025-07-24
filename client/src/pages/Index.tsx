@@ -9,6 +9,7 @@ import { QuickStats } from "@/components/dashboard/QuickStats";
 import { MoodSelector } from "@/components/dashboard/MoodSelector";
 import { AISuggestions } from "@/components/dashboard/AISuggestions";
 import { AIChat } from "@/components/ai/AIChat";
+import { SmartTimeSuggestions } from "@/components/ai/SmartTimeSuggestions";
 import { 
   CalendarDays, 
   Target, 
@@ -386,6 +387,16 @@ export default function Index() {
                   <MoodSelector onMoodSelect={saveMoodEntry} selectedMood={selectedMood} />
                 </CardContent>
               </Card>
+
+              {/* AI Time Suggestions */}
+              {selectedMood && (
+                <SmartTimeSuggestions 
+                  mood={selectedMood}
+                  availableTime={45} // Example: 45 minutes free time
+                  recentActivities={recentActivities.map(a => a.title)}
+                  userContext={{}}
+                />
+              )}
 
               {/* Quick Actions */}
               <Card>
