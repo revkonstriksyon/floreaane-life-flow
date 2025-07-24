@@ -27,37 +27,21 @@ import {
   Trash2,
   Brain,
   Play,
-  Pause
+  Pause,
+  Search
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { AIInsights } from "@/components/ai/AIInsights";
 import { AIChat } from "@/components/ai/AIChat";
 
-interface Task {
-  id: string;
-  user_id: string;
-  project_id: string | null;
-  title: string;
-  time: string | null;
-  duration: number | null;
-  priority: string;
-  category: string;
-  status: string;
-  location: string | null;
-  objective: string | null;
-  scheduled_date: string | null;
-  is_recurring: boolean;
-  recurring_pattern: any;
-  created_at: string;
-  updated_at: string;
-}
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 const taskCategories = {
   personal: { label: "Pèsonèl", color: "bg-blue-500" },
   work: { label: "Travay", color: "bg-green-500" },
   health: { label: "Sante", color: "bg-red-500" },
-  social: { label: "Sosyal", color: "bg-typescript
-purple-500" },
+  social: { label: "Sosyal", color: "bg-purple-500" },
   education: { label: "Edikasyon", color: "bg-yellow-500" },
   finance: { label: "Finans", color: "bg-emerald-500" },
   household: { label: "Kay", color: "bg-orange-500" },

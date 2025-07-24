@@ -30,29 +30,12 @@ import {
   Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useLocation } from "wouter";
 import { AIInsights } from "@/components/ai/AIInsights";
 import { AIChat } from "@/components/ai/AIChat";
 
-interface Contact {
-  id: string;
-  first_name: string;
-  last_name: string | null;
-  email: string | null;
-  phone: string | null;
-  relationship_type: 'family' | 'friend' | 'colleague' | 'client' | 'acquaintance' | null;
-  notes: string | null;
-  birthday: string | null;
-  last_contacted: string | null;
-  contact_frequency_days: number | null;
-  tags: string[] | null;
-  address: string | null;
-  company: string | null;
-  position: string | null;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
+type Contact = Database['public']['Tables']['contacts']['Row'];
 
 const relationshipTypes = {
   family: { label: "Fanmi", icon: Heart, color: "bg-red-500" },
@@ -74,14 +57,11 @@ export default function Contacts() {
     first_name: "",
     last_name: "",
     email: "",
-    phone: "",
+    phone_number: "",
     relationship_type: "",
     notes: "",
-    birthday: "",
-    company: "",
-    position: "",
-    address: "",
-    contact_frequency_days: 30
+    contact_frequency_days: 30,
+    user_id: ""
   });
 
   useEffect(() => {
@@ -118,14 +98,11 @@ export default function Contacts() {
         first_name: "",
         last_name: "",
         email: "",
-        phone: "",
+        phone_number: "",
         relationship_type: "",
         notes: "",
-        birthday: "",
-        company: "",
-        position: "",
-        address: "",
-        contact_frequency_days: 30
+        contact_frequency_days: 30,
+        user_id: ""
       });
       setIsAddDialogOpen(false);
     } catch (error) {
@@ -142,12 +119,12 @@ export default function Contacts() {
   });
 
   const getContactStatus = (contact: Contact) => {
-    if (!contact.last_contacted || !contact.contact_frequency_days) {
+    if (!contact.last_contacted_at || !contact.contact_frequency_days) {
       return { status: "unknown", label: "Pa konnen", color: "text-gray-500" };
     }
 
     const today = new Date();
-    const lastContact = new Date(contact.last_contacted);
+    const lastContact = new Date(contact.last_contacted_at);
     const daysSince = Math.ceil((today.getTime() - lastContact.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysSince > contact.contact_frequency_days) {
@@ -251,11 +228,11 @@ export default function Contacts() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Telefòn</Label>
+                      <Label htmlFor="phone_number">Telefòn</Label>
                       <Input
-                        id="phone"
-                        value={newContact.phone}
-                        onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                        id="phone_number"
+                        value={newContact.phone_number}
+                        onChange={(e) => setNewContact({...newContact, phone_number: e.target.value})}
                         placeholder="+509 1234-5678"
                       />
                     </div>
@@ -408,24 +385,19 @@ export default function Contacts() {
                             </div>
                           )}
 
-                          {contact.phone && (
+                          {contact.phone_number && (
                             <div className="flex items-center gap-2">
                               <Phone className="h-4 w-4 text-muted-foreground" />
-                              <span>{contact.phone}</span>
+                              <span>{contact.phone_number}</span>
                             </div>
                           )}
 
-                          {contact.company && (
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="h-4 w-4 text-muted-foreground" />
-                              <span>{contact.company}</span>
-                            </div>
-                          )}
 
-                          {contact.birthday && (
+
+                          {contact.birthdate && (
                             <div className="flex items-center gap-2">
                               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                              <span>{new Date(contact.birthday).toLocaleDateString()}</span>
+                              <span>{new Date(contact.birthdate).toLocaleDateString()}</span>
                             </div>
                           )}
 
@@ -488,10 +460,10 @@ export default function Contacts() {
                                     {contact.email}
                                   </span>
                                 )}
-                                {contact.phone && (
+                                {contact.phone_number && (
                                   <span className="flex items-center gap-1">
                                     <Phone className="h-3 w-3" />
-                                    {contact.phone}
+                                    {contact.phone_number}
                                   </span>
                                 )}
                               </div>
@@ -591,10 +563,10 @@ export default function Contacts() {
                   <CardContent>
                     <div className="space-y-3">
                       {contacts
-                        .filter(c => c.birthday)
+                        .filter(c => c.birthdate)
                         .sort((a, b) => {
-                          const aMonth = new Date(a.birthday!).getMonth();
-                          const bMonth = new Date(b.birthday!).getMonth();
+                          const aMonth = new Date(a.birthdate!).getMonth();
+                          const bMonth = new Date(b.birthdate!).getMonth();
                           return aMonth - bMonth;
                         })
                         .slice(0, 5)
@@ -608,7 +580,7 @@ export default function Contacts() {
                             <div>
                               <p className="font-medium text-sm">{contact.first_name} {contact.last_name}</p>
                               <p className="text-xs text-green-600">
-                                {new Date(contact.birthday!).toLocaleDateString()}
+                                {new Date(contact.birthdate!).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
