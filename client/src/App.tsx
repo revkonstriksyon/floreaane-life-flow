@@ -11,6 +11,7 @@ import Contacts from "@/pages/Contacts";
 import ContactDetail from "@/pages/ContactDetail";
 import Notes from "@/pages/Notes";
 import Finances from "@/pages/Finances";
+import Reports from "@/pages/Reports";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
         <Route path="/contacts/:id" component={ContactDetail} />
         <Route path="/notes" component={Notes} />
         <Route path="/finances" component={Finances} />
+        <Route path="/reports" component={Reports} />
         <Route component={NotFound} />
       </Switch>
     </Router>

@@ -199,14 +199,16 @@ export default function Agenda() {
     });
   };
 
-  const getTasksForWeek = (startDate: Date) => {
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
+  const getTasksForWeek = (date: Date) => {
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() - date.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
 
     return tasks.filter(task => {
       if (!task.scheduled_date) return false;
       const taskDate = new Date(task.scheduled_date);
-      return taskDate >= startDate && taskDate <= endDate;
+      return taskDate >= startOfWeek && taskDate <= endOfWeek;
     });
   };
 
@@ -256,19 +258,6 @@ export default function Agenda() {
     const taskDate = new Date(task.scheduled_date);
     return taskDate.toDateString() === selectedDate.toDateString();
   });
-
-  const getTasksForWeek = (date: Date) => {
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - date.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    return tasks.filter(task => {
-      if (!task.scheduled_date) return false;
-      const taskDate = new Date(task.scheduled_date);
-      return taskDate >= startOfWeek && taskDate <= endOfWeek;
-    });
-  };
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

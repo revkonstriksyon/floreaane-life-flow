@@ -71,7 +71,7 @@ export function Sidebar({ collapsed = false, onToggle, currentPath = "/" }: Side
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
-        
+
         {!collapsed && (
           <div className="mt-4 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -92,7 +92,7 @@ export function Sidebar({ collapsed = false, onToggle, currentPath = "/" }: Side
               MAIN MENU
             </h2>
           )}
-          
+
           <nav className="space-y-1">
             {menuItems.map((item) => {
               const isActive = currentPath === item.href;
@@ -136,7 +136,7 @@ export function Sidebar({ collapsed = false, onToggle, currentPath = "/" }: Side
               PREFERANS
             </h2>
           )}
-          
+
           <nav className="space-y-1">
             {preferences.map((item) => (
               <Button
