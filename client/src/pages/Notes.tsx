@@ -33,6 +33,8 @@ import {
   Bookmark
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AIInsights } from "@/components/ai/AIInsights";
+import { AIChat } from "@/components/ai/AIChat";
 
 interface Note {
   id: string;
@@ -322,6 +324,15 @@ export default function Notes() {
           </Card>
         </div>
 
+        {/* AI Insights */}
+        <div className="p-6 pb-0">
+          <AIInsights 
+            data={notes} 
+            type="notes" 
+            title="Konsey AI pou Nòt yo"
+          />
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="grid" className="w-full">
@@ -570,6 +581,17 @@ export default function Notes() {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Mwen gen ${notes.length} nòt total, ${favoriteNotes.length} nan favori yo.`}
+        suggestions={[
+          "Ki ide nouvo mwen ka eksplore?",
+          "Ki jan pou òganize nòt yo pi byen?",
+          "Bay m enspiyasyon pou pwojè nouvo",
+          "Ki jan pou itilize nòt yo pi efikasman?"
+        ]}
+      />
     </div>
   );
 }

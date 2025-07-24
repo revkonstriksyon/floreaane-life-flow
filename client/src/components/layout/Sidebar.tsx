@@ -17,7 +17,10 @@ import {
   Bell,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Target,
+  Star,
+  Bot
 } from "lucide-react";
 
 const menuItems = [

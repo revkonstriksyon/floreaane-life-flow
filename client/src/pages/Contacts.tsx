@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "wouter";
+import { AIInsights } from "@/components/ai/AIInsights";
+import { AIChat } from "@/components/ai/AIChat";
 
 interface Contact {
   id: string;
@@ -348,6 +350,15 @@ export default function Contacts() {
           </Card>
         </div>
 
+        {/* AI Insights */}
+        <div className="p-6 pb-0">
+          <AIInsights 
+            data={contacts} 
+            type="contacts" 
+            title="Konsey AI pou Relasyon yo"
+          />
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="cards" className="w-full">
@@ -610,6 +621,17 @@ export default function Contacts() {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Mwen gen ${contacts.length} kontak total, ${contacts.filter(c => getContactStatus(c).status === "overdue").length} bezwen atansyon.`}
+        suggestions={[
+          "Ki moun mwen bezwen kontakte?",
+          "Ki jan pou kenbe bon relasyon?",
+          "Bay konsey pou devlope rezo mwen",
+          "Ki moun ki bezwen pi plis atansyon?"
+        ]}
+      />
     </div>
   );
 }

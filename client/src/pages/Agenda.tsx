@@ -56,7 +56,8 @@ const taskCategories = {
   personal: { label: "Pèsonèl", color: "bg-blue-500" },
   work: { label: "Travay", color: "bg-green-500" },
   health: { label: "Sante", color: "bg-red-500" },
-  social: { label: "Sosyal", color: "bg-purple-500" },
+  social: { label: "Sosyal", color: "bg-typescript
+purple-500" },
   education: { label: "Edikasyon", color: "bg-yellow-500" },
   finance: { label: "Finans", color: "bg-emerald-500" },
   household: { label: "Kay", color: "bg-orange-500" },

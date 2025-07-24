@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { DayPreview } from "@/components/dashboard/DayPreview";
 import { QuickStats } from "@/components/dashboard/QuickStats";
 import { MoodSelector } from "@/components/dashboard/MoodSelector";
 import { AISuggestions } from "@/components/dashboard/AISuggestions";
+import { AIChat } from "@/components/ai/AIChat";
 import { 
   CalendarDays, 
   Target, 
@@ -104,15 +104,15 @@ export default function Index() {
       // Calculate stats
       const completedTasks = tasks.filter(t => t.status === 'completed').length;
       const activeProjects = projects.filter(p => p.status === 'active' || p.status === 'in_progress').length;
-      
+
       const today = new Date();
       const currentMonth = today.getMonth();
       const currentYear = today.getFullYear();
-      
+
       const monthlyIncome = transactions
         .filter(t => t.type === 'income' && new Date(t.date).getMonth() === currentMonth && new Date(t.date).getFullYear() === currentYear)
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       const monthlyExpenses = transactions
         .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === currentMonth && new Date(t.date).getFullYear() === currentYear)
         .reduce((sum, t) => sum + t.amount, 0);
@@ -142,7 +142,7 @@ export default function Index() {
         .filter(t => t.status === 'pending' && t.scheduled_date)
         .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
         .slice(0, 5);
-      
+
       setUpcomingTasks(upcoming);
 
       // Create recent activities
@@ -214,7 +214,7 @@ export default function Index() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      
+
       <main className="flex-1 overflow-auto">
         <div className="p-6">
           {/* Header */}
@@ -441,6 +441,17 @@ export default function Index() {
           </div>
         </div>
       </main>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Dashboard jou a: Mood ,  tach pou jou a,  pwojè aktif.`}
+        suggestions={[
+          "Ki sa m bezwen fè jou a?",
+          "Bay m motivasyon pou jou a",
+          "Ki priyorite yo pi ijan?",
+          "Ki jan pou òganize jounen an?"
+        ]}
+      />
     </div>
   );
 }

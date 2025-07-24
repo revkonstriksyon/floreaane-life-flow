@@ -36,6 +36,8 @@ import {
   MapPin
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AIInsights } from "@/components/ai/AIInsights";
+import { AIChat } from "@/components/ai/AIChat";
 
 interface Asset {
   id: string;
@@ -346,6 +348,15 @@ export default function Assets() {
             </Select>
           </div>
 
+          {/* AI Insights */}
+          <div className="mb-6">
+            <AIInsights 
+              data={assets} 
+              type="assets" 
+              title="Konsey AI pou Byen yo"
+            />
+          </div>
+
           {/* Main Content Tabs */}
           <Tabs defaultValue="assets" className="space-y-6">
             <TabsList>
@@ -503,6 +514,17 @@ export default function Assets() {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Mwen gen ${assets.length} asset total ak valè ${totalValue.toLocaleString()} dola.`}
+        suggestions={[
+          "Ki bien ki bezwen pi plis atansyon?",
+          "Ki jan pou pwoteje byen yo pi byen?",
+          "Bay konsey sou asirans ak garanti",
+          "Ki bien ki gen pi plis valè?"
+        ]}
+      />
     </div>
   );
 }

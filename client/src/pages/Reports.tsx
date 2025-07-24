@@ -24,6 +24,8 @@ import {
   Activity
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AIInsights } from "@/components/ai/AIInsights";
+import { AIChat } from "@/components/ai/AIChat";
 
 interface ReportData {
   tasks: any[];
@@ -649,6 +651,17 @@ export default function Reports() {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Chat */}
+      <AIChat 
+        context={`Rapo pou peryòd ${selectedPeriod}: ${productivityMetrics.tasksCompleted} tach fini, revni net ${financialMetrics.netIncome.toFixed(2)} dola.`}
+        suggestions={[
+          "Analize pèfòmans mwen nan peryòd la",
+          "Ki sa m ka amelyore?",
+          "Bay konsey pou mwa k ap vini an",
+          "Ki kote m bezwen konsantre pi plis?"
+        ]}
+      />
     </div>
   );
 }

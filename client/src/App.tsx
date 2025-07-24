@@ -5,6 +5,7 @@ import { Router, Route, Switch } from "wouter";
 import Index from "@/pages/Index";
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
+import AIAssistant from "./pages/AIAssistant";
 import Agenda from "@/pages/Agenda";
 import Assets from "@/pages/Assets";
 import Contacts from "@/pages/Contacts";
@@ -32,6 +33,7 @@ const App = () => (
         <Route path="/notes" component={Notes} />
         <Route path="/finances" component={Finances} />
         <Route path="/reports" component={Reports} />
+        <Route path="/ai-assistant" component={AIAssistant} />
         <Route component={NotFound} />
       </Switch>
     </Router>
