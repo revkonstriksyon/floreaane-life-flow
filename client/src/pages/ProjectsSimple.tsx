@@ -30,26 +30,12 @@ import {
   Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { useProjects, useCreateProject } from "@/hooks/api/useProjects";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
+import type { Project } from "@shared/schema";
 
-interface Project {
-  id: string;
-  name: string;
-  short_description: string;
-  description?: string;
-  category: string;
-  status: string;
-  priority: string;
-  progress: number;
-  deadline: string;
-  budget?: number;
-  spent?: number;
-  team: number;
-  tags?: string;
-  created_at: string;
-  updated_at: string;
-}
+// Using Project type from shared schema
 
 const projectCategories = {
   personal: { label: "Pèsonèl", color: "bg-blue-500" },
@@ -73,8 +59,7 @@ const statusConfig = {
 };
 
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { userId } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -82,76 +67,59 @@ export default function Projects() {
   const [, setLocation] = useLocation();
   const isMobile = useIsMobile();
 
+  // Use React Query hooks
+  const { data: projects = [], isLoading, refetch } = useProjects(userId!);
+  const createProjectMutation = useCreateProject();
+
   const [newProject, setNewProject] = useState({
     name: "",
-    short_description: "",
-    description: "",
+    shortDescription: "",
     category: "",
-    status: "planning",
-    priority: "medium",
+    status: "planning" as const,
+    priority: "medium" as const,
     deadline: "",
-    budget: 0,
+    budget: "",
     team: 1,
-    tags: ""
+    tags: [] as string[],
   });
 
-  const fetchProjects = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
   const handleRefresh = async () => {
-    await fetchProjects();
+    await refetch();
   };
 
   const addProject = async () => {
+    if (!userId) return;
+    
     try {
       const projectData = {
-        ...newProject,
+        userId,
+        name: newProject.name.trim(),
+        shortDescription: newProject.shortDescription.trim() || null,
+        category: newProject.category,
+        status: newProject.status,
+        priority: newProject.priority,
         progress: 0,
-        spent: 0,
-        tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()) : []
+        deadline: newProject.deadline ? new Date(newProject.deadline) : null,
+        budget: newProject.budget ? parseFloat(newProject.budget) : null,
+        team: newProject.team,
+        spent: "0",
+        tags: newProject.tags,
       };
 
-      const { data, error } = await supabase
-        .from('projects')
-        .insert([projectData])
-        .select();
-
-      if (error) throw error;
-
-      if (data) {
-        setProjects([...data, ...projects]);
-        setNewProject({
-          name: "",
-          short_description: "",
-          description: "",
-          category: "",
-          status: "planning",
-          priority: "medium",
-          deadline: "",
-          budget: 0,
-          team: 1,
-          tags: ""
-        });
-        setIsAddDialogOpen(false);
-      }
+      await createProjectMutation.mutateAsync(projectData);
+      
+      setNewProject({
+        name: "",
+        shortDescription: "",
+        category: "",
+        status: "planning" as const,
+        priority: "medium" as const,
+        deadline: "",
+        budget: "",
+        team: 1,
+        tags: [],
+      });
+      setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Error adding project:', error);
     }
@@ -159,7 +127,7 @@ export default function Projects() {
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.short_description?.toLowerCase().includes(searchQuery.toLowerCase());
+                         project.shortDescription?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || project.status === filterStatus;
     const matchesCategory = filterCategory === "all" || project.category === filterCategory;
     
@@ -193,7 +161,7 @@ export default function Projects() {
             <div className="flex-1">
               <CardTitle className="text-lg mb-1">{project.name}</CardTitle>
               <p className="text-sm text-muted-foreground line-clamp-2">
-                {project.short_description}
+                {project.shortDescription}
               </p>
             </div>
             <Badge className={cn("ml-2", statusInfo?.color)}>
@@ -213,7 +181,7 @@ export default function Projects() {
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>{new Date(project.deadline).toLocaleDateString()}</span>
+                <span>{project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline'}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
@@ -331,8 +299,8 @@ export default function Projects() {
                   <Label htmlFor="description">Deskripsyon kout</Label>
                   <Textarea
                     id="description"
-                    value={newProject.short_description}
-                    onChange={(e) => setNewProject({...newProject, short_description: e.target.value})}
+                    value={newProject.shortDescription}
+                    onChange={(e) => setNewProject({...newProject, shortDescription: e.target.value})}
                     placeholder="Eksplike pwojè a nan kèk mo..."
                     rows={3}
                   />
@@ -365,8 +333,8 @@ export default function Projects() {
                   <Label htmlFor="tags">Tags (separe yo ak virgule)</Label>
                   <Input
                     id="tags"
-                    value={newProject.tags}
-                    onChange={(e) => setNewProject({...newProject, tags: e.target.value})}
+                    value={newProject.tags.join(', ')}
+                    onChange={(e) => setNewProject({...newProject, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)})}
                     placeholder="urgent, kliyan, solo"
                   />
                 </div>

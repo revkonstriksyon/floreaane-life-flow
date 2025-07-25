@@ -33,8 +33,7 @@ import {
   Pause,
   Search
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+// TODO: Migrate to new API hooks
 import { AIInsights } from "@/components/ai/AIInsights";
 import { AIChat } from "@/components/ai/AIChat";
 

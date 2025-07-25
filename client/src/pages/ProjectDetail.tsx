@@ -33,8 +33,7 @@ import {
   Zap,
   BarChart3
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+// TODO: Migrate to new API hooks
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AIInsights } from "@/components/ai/AIInsights";
 

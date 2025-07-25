@@ -28,7 +28,7 @@ import {
   Bell,
   Settings
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+// TODO: Migrate to new API hooks
 import { GeminiAI } from "@/lib/gemini";
 
 interface DatabaseData {

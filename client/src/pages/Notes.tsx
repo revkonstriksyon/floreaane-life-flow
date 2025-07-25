@@ -32,7 +32,7 @@ import {
   Music,
   Bookmark
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+// TODO: Migrate to new API hooks
 import { AIInsights } from "@/components/ai/AIInsights";
 import { AIChat } from "@/components/ai/AIChat";
 

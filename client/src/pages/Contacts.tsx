@@ -29,13 +29,12 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+// TODO: Migrate to new API hooks
 import { useLocation } from "wouter";
 import { AIInsights } from "@/components/ai/AIInsights";
 import { AIChat } from "@/components/ai/AIChat";
 
-type Contact = Database['public']['Tables']['contacts']['Row'];
+// type Contact = Database['public']['Tables']['contacts']['Row']; // TODO: Update to use shared schema
 
 const relationshipTypes = {
   family: { label: "Fanmi", icon: Heart, color: "bg-red-500" },

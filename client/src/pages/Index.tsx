@@ -30,7 +30,7 @@ import {
   Calendar,
   Briefcase
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+// TODO: Migrate to new API hooks
 
 interface DashboardStats {
   totalTasks: number;

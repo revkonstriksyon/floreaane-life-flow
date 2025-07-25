@@ -35,7 +35,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+// TODO: Migrate to new API hooks
 import { useLocation } from "wouter";
 
 interface Project {

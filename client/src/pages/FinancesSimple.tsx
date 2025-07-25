@@ -22,7 +22,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+// TODO: Migrate to new API hooks
 import { SafeArea } from "@/components/mobile/SafeArea";
 import { AIChat } from "@/components/ai/AIChat";
 
