@@ -3,11 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router, Route, Switch } from "wouter";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Index from "@/pages/Index";
+import Index from "@/pages/IndexSimple";
 import Projects from "@/pages/ProjectsSimple";
 import ProjectDetail from "@/pages/ProjectDetailSimple";
 import AIAssistant from "./pages/AIAssistantSimple";
-import Agenda from "@/pages/AgendaEnhanced";
+import Agenda from "@/pages/AgendaSimple";
 import Assets from "@/pages/Assets";
 import ContactsSimple from "@/pages/ContactsSimple";
 import ContactDetail from "@/pages/ContactDetail";
@@ -30,7 +30,7 @@ const App = () => (
           <Route path="/projects/:id" component={ProjectDetail} />
           <Route path="/agenda" component={Agenda} />
           <Route path="/assets" component={Assets} />
-          <Route path="/contacts" component={Contacts} />
+          <Route path="/contacts" component={ContactsSimple} />
           <Route path="/contacts/:id" component={ContactDetail} />
           <Route path="/notes" component={Notes} />
           <Route path="/finances" component={Finances} />
