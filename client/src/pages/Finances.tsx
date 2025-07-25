@@ -209,8 +209,7 @@ export default function Finances() {
   const isMobile = useIsMobile();
 
   const handleRefresh = async () => {
-    await fetchTransactions();
-    await fetchBills();
+    await fetchFinancialData();
   };
 
   if (isLoading) {
@@ -781,5 +780,17 @@ export default function Finances() {
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <ResponsiveLayout currentPath="/finances">
+      {isMobile ? (
+        <PullToRefresh onRefresh={handleRefresh}>
+          {content}
+        </PullToRefresh>
+      ) : (
+        content
+      )}
+    </ResponsiveLayout>
   );
 }

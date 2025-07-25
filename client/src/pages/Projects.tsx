@@ -676,18 +676,17 @@ export default function Projects() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
 
-      {/* AI Chat */}
-      <AIChat 
-        context={`Mwen gen ${projects.length} pwojè total, ${projects.filter(p => p.status === 'active').length} aktif.`}
-        suggestions={[
-          "Ki pwojè ki bezwen pi plis atansyon?",
-          "Ki jan pou jere delè pwojè yo?",
-          "Bay konsey pou amelyore jesyon pwojè",
-          "Ki priyorite pou semèn nan?"
-        ]}
-      />
+        {/* AI Chat */}
+        <AIChat 
+          context="Mwen gen plizyè pwojè k ap travay sou yo."
+          suggestions={[
+            "Ki pwojè ki bezwen pi plis atansyon?",
+            "Ki jan pou jere delè pwojè yo?",
+            "Bay konsey pou amelyore jesyon pwojè",
+            "Ki priyorite pou semèn nan?"
+          ]}
+        />
     </div>
   );
 

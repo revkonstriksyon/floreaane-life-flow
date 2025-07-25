@@ -782,18 +782,17 @@ export default function Agenda() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
 
-      {/* AI Chat */}
-      <AIChat 
-        context={`Mwen gen ${tasks.length} tach total, ${todayTasks.length} pou jou a, ${completedToday} fini deja.`}
-        suggestions={[
-          "Ki tach ki pi ijan pou jou a?",
-          "Ki jan pou òganize tan mwen pi byen?",
-          "Bay m konsey pou fini tout tach yo",
-          "Ki jan pou jere tach ki an reta yo?"
-        ]}
-      />
+        {/* AI Chat */}
+        <AIChat 
+          context="Mwen gen plizyè tach ki planifye pou jou a."
+          suggestions={[
+            "Ki tach ki pi ijan pou jou a?",
+            "Ki jan pou òganize tan mwen pi byen?",
+            "Bay m konsey pou fini tout tach yo",
+            "Ki jan pou jere tach ki an reta yo?"
+          ]}
+        />
     </div>
   );
 
