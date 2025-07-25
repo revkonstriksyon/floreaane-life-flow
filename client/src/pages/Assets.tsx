@@ -4,6 +4,7 @@
 <replit_final_file>
 import { useState, useEffect } from "react";
 import { ResponsiveLayout } from "@/components/layout/ResponsiveLayout";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { PullToRefresh } from "@/components/mobile/TouchOptimized";
 import { TouchOptimizedButton } from "@/components/mobile/TouchOptimized";
 import { useIsMobile } from "@/hooks/use-mobile";
