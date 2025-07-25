@@ -1,10 +1,5 @@
-` tags, effectively overwriting the original file with the corrected version. I need to make sure that the final code compiles and works.
-
-```
-<replit_final_file>
 import { useState, useEffect } from "react";
 import { ResponsiveLayout } from "@/components/layout/ResponsiveLayout";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { PullToRefresh } from "@/components/mobile/TouchOptimized";
 import { TouchOptimizedButton } from "@/components/mobile/TouchOptimized";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,22 +23,9 @@ import {
   FileText,
   Plus,
   Search,
-  Filter,
-  Eye,
-  Edit,
-  AlertTriangle,
-  Calendar,
   DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Smartphone,
-  Camera,
-  Shirt,
-  Watch,
-  Building,
-  Key,
-  Shield,
-  MapPin
+  MapPin,
+  Shield
 } from "lucide-react";
 import { AIInsights } from "@/components/ai/AIInsights";
 import { AIChat } from "@/components/ai/AIChat";
@@ -63,7 +44,7 @@ const categoryNames: Record<string, string> = {
 const categoryIcons: Record<string, any> = {
   real_estate: Home,
   technology: Laptop,
-  clothing: Shirt,
+  clothing: FileText,
   vehicles: Car,
   tools: Wrench,
   art: ImageIcon,
@@ -89,9 +70,6 @@ export default function Assets() {
     purchaseDate: "",
     location: "",
     description: "",
-    warrantyEndDate: "",
-    insuranceExpiryDate: "",
-    serialNumber: "",
     notes: ""
   });
 
@@ -107,14 +85,11 @@ export default function Assets() {
         userId,
         name: newAsset.name.trim(),
         category: newAsset.category,
-        purchasePrice: newAsset.purchasePrice ? parseFloat(newAsset.purchasePrice) : null,
-        currentValue: newAsset.currentValue ? parseFloat(newAsset.currentValue) : null,
+        purchasePrice: newAsset.purchasePrice || null,
+        currentValue: newAsset.currentValue || null,
         purchaseDate: newAsset.purchaseDate ? new Date(newAsset.purchaseDate) : null,
         location: newAsset.location || null,
         description: newAsset.description || null,
-        warrantyEndDate: newAsset.warrantyEndDate ? new Date(newAsset.warrantyEndDate) : null,
-        insuranceExpiryDate: newAsset.insuranceExpiryDate ? new Date(newAsset.insuranceExpiryDate) : null,
-        serialNumber: newAsset.serialNumber || null,
         notes: newAsset.notes || null,
       };
 
@@ -128,9 +103,6 @@ export default function Assets() {
         purchaseDate: "",
         location: "",
         description: "",
-        warrantyEndDate: "",
-        insuranceExpiryDate: "",
-        serialNumber: "",
         notes: ""
       });
       setIsAddDialogOpen(false);
@@ -139,24 +111,20 @@ export default function Assets() {
     }
   };
 
-  const filteredAssets = assets.filter(asset => {
+  const filteredAssets = assets.filter((asset: Asset) => {
     const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          asset.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "all" || asset.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const totalValue = assets.reduce((sum, asset) => sum + (asset.currentValue || asset.purchasePrice || 0), 0);
+  const totalValue = assets.reduce((sum: number, asset: Asset) => {
+    const value = parseFloat(asset.currentValue || asset.purchasePrice || '0');
+    return sum + value;
+  }, 0);
+  
   const totalAssets = assets.length;
-  const categoriesCount = new Set(assets.map(a => a.category).filter(Boolean)).size;
-
-  const expiringWarranties = assets.filter(asset => {
-    if (!asset.warrantyEndDate) return false;
-    const expiryDate = new Date(asset.warrantyEndDate);
-    const now = new Date();
-    const monthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    return expiryDate <= monthFromNow;
-  });
+  const categoriesCount = new Set(assets.map((a: Asset) => a.category).filter(Boolean)).size;
 
   const content = (
     <div className={cn("p-4 space-y-6", !isMobile && "p-6")}>
@@ -170,7 +138,7 @@ export default function Assets() {
         {/* Quick Stats */}
         <div className={cn(
           "grid gap-4",
-          isMobile ? "grid-cols-2" : "grid-cols-4"
+          isMobile ? "grid-cols-2" : "grid-cols-3"
         )}>
           <Card>
             <CardContent className="p-4">
@@ -193,14 +161,6 @@ export default function Assets() {
               <div className="text-center">
                 <p className="text-2xl font-bold text-purple-600">{categoriesCount}</p>
                 <p className="text-sm text-muted-foreground">Kategori</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-600">{expiringWarranties.length}</p>
-                <p className="text-sm text-muted-foreground">Garanti Expire</p>
               </div>
             </CardContent>
           </Card>
@@ -332,7 +292,7 @@ export default function Assets() {
           </div>
         ) : filteredAssets.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAssets.map((asset) => {
+            {filteredAssets.map((asset: Asset) => {
               const CategoryIcon = categoryIcons[asset.category as keyof typeof categoryIcons] || FileText;
 
               return (
@@ -361,7 +321,7 @@ export default function Assets() {
                           Valè
                         </span>
                         <span className="font-medium">
-                          ${(asset.currentValue || asset.purchasePrice || 0).toLocaleString()}
+                          ${parseFloat(asset.currentValue || asset.purchasePrice || '0').toLocaleString()}
                         </span>
                       </div>
 

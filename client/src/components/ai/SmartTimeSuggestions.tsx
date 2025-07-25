@@ -68,7 +68,7 @@ export function SmartTimeSuggestions({ mood, availableTime, recentActivities, us
       const data = await response.json();
       return data.suggestions as TimeSlotSuggestion[];
     },
-    enabled: mood && availableTime > 0,
+    enabled: Boolean(mood && availableTime > 0),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

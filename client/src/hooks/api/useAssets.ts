@@ -29,7 +29,7 @@ export function useUpdateAsset() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, asset }: { id: number; asset: Partial<Asset> }) =>
+    mutationFn: ({ id, asset }: { id: string; asset: Partial<Asset> }) =>
       apiRequest(`/api/assets/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(asset),
@@ -44,7 +44,7 @@ export function useDeleteAsset() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       apiRequest(`/api/assets/${id}`, {
         method: 'DELETE',
       }),

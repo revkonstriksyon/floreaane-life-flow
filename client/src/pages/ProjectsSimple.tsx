@@ -100,7 +100,7 @@ export default function Projects() {
         priority: newProject.priority,
         progress: 0,
         deadline: newProject.deadline ? new Date(newProject.deadline) : null,
-        budget: newProject.budget ? parseFloat(newProject.budget) : null,
+        estimatedBudget: newProject.budget || null,
         team: newProject.team,
         spent: "0",
         tags: newProject.tags,
