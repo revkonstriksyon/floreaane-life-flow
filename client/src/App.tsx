@@ -9,7 +9,7 @@ import ProjectDetail from "@/pages/ProjectDetailSimple";
 import AIAssistant from "./pages/AIAssistantSimple";
 import Agenda from "@/pages/AgendaEnhanced";
 import Assets from "@/pages/Assets";
-import Contacts from "@/pages/ContactsSimple";
+import ContactsSimple from "@/pages/ContactsSimple";
 import ContactDetail from "@/pages/ContactDetail";
 import Notes from "@/pages/NotesSimple";
 import Finances from "@/pages/FinancesSimple";
