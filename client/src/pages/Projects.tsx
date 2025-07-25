@@ -690,4 +690,16 @@ export default function Projects() {
       />
     </div>
   );
+
+  return (
+    <ResponsiveLayout currentPath="/projects">
+      {isMobile ? (
+        <PullToRefresh onRefresh={handleRefresh}>
+          {content}
+        </PullToRefresh>
+      ) : (
+        content
+      )}
+    </ResponsiveLayout>
+  );
 }

@@ -796,4 +796,16 @@ export default function Agenda() {
       />
     </div>
   );
+
+  return (
+    <ResponsiveLayout currentPath="/agenda">
+      {isMobile ? (
+        <PullToRefresh onRefresh={handleRefresh}>
+          {content}
+        </PullToRefresh>
+      ) : (
+        content
+      )}
+    </ResponsiveLayout>
+  );
 }
