@@ -7,7 +7,7 @@ import Index from "@/pages/Index";
 import Projects from "@/pages/ProjectsSimple";
 import ProjectDetail from "@/pages/ProjectDetailSimple";
 import AIAssistant from "./pages/AIAssistantSimple";
-import Agenda from "@/pages/AgendaSimple";
+import Agenda from "@/pages/AgendaEnhanced";
 import Assets from "@/pages/Assets";
 import Contacts from "@/pages/ContactsSimple";
 import ContactDetail from "@/pages/ContactDetail";

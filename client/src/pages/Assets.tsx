@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ResponsiveLayout } from "@/components/layout/ResponsiveLayout";
-import { PullToRefresh, TouchOptimizedButton } from "@/components/mobile/TouchOptimized";
+import { PullToRefresh } from "@/components/mobile/TouchOptimized";
+import { TouchOptimizedButton } from "@/components/mobile/TouchOptimized";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -224,10 +225,10 @@ export default function Assets() {
           </Select>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <TouchOptimizedButton>
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvo Asset
-              </TouchOptimizedButton>
+              </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
@@ -377,10 +378,10 @@ export default function Assets() {
                 <p className="text-muted-foreground mb-4">
                   {searchQuery || selectedCategory !== "all" ? "Pa gen asset ki kòrèk ak rechèch la" : "Pa gen asset yo"}
                 </p>
-                <TouchOptimizedButton onClick={() => setIsAddDialogOpen(true)}>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Ajoute Premye Asset Ou
-                </TouchOptimizedButton>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -401,47 +402,6 @@ export default function Assets() {
     </ResponsiveLayout>
   );
 }
-                    <Label htmlFor="category">Kategori</Label>
-                    <Select value={newAsset.category} onValueChange={(value) => setNewAsset({...newAsset, category: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chwazi kategori" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="real_estate">Kay ak Tè</SelectItem>
-                        <SelectItem value="technology">Teknoloji</SelectItem>
-                        <SelectItem value="vehicles">Machin</SelectItem>
-                        <SelectItem value="tools">Zouti</SelectItem>
-                        <SelectItem value="clothing">Rad</SelectItem>
-                        <SelectItem value="art">Atis</SelectItem>
-                        <SelectItem value="documents">Dokiman</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="purchase_price">Pri acha ($)</Label>
-                      <Input
-                        id="purchase_price"
-                        type="number"
-                        value={newAsset.purchase_price}
-                        onChange={(e) => setNewAsset({...newAsset, purchase_price: parseFloat(e.target.value) || 0})}
-                        placeholder="1500"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="current_value">Valè kounye a ($)</Label>
-                      <Input
-                        id="current_value"
-                        type="number"
-                        value={newAsset.current_value}
-                        onChange={(e) => setNewAsset({...newAsset, current_value: parseFloat(e.target.value) || 0})}
-                        placeholder="1200"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="purchase_date">Dat acha</Label>
-                    <Input
                       id="purchase_date"
                       type="date"
                       value={newAsset.purchase_date}

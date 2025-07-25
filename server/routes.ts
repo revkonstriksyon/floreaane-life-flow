@@ -280,6 +280,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Assets
+  app.get("/api/assets", async (req, res) => {
+    try {
+      const { userId } = req.query;
+      if (!userId || typeof userId !== 'string') {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      const assets = await storage.getAssets(userId);
+      res.json(assets);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch assets" });
+    }
+  });
+
+  app.get("/api/assets/:id", async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      if (!asset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+      res.json(asset);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch asset" });
+    }
+  });
+
+  app.post("/api/assets", validateRequest(insertAssetSchema), async (req, res) => {
+    try {
+      const asset = await storage.createAsset(req.body);
+      res.json(asset);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create asset" });
+    }
+  });
+
+  app.put("/api/assets/:id", async (req, res) => {
+    try {
+      const asset = await storage.updateAsset(req.params.id, req.body);
+      res.json(asset);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update asset" });
+    }
+  });
+
+  app.delete("/api/assets/:id", async (req, res) => {
+    try {
+      await storage.deleteAsset(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete asset" });
+    }
+  });
+
   // Mood Entries
   app.get("/api/mood", async (req, res) => {
     try {
