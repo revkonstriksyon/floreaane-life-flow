@@ -45,6 +45,15 @@ export const tasks = pgTable("tasks", {
   scheduledDate: timestamp("scheduled_date"),
   isRecurring: boolean("is_recurring").default(false),
   recurringPattern: jsonb("recurring_pattern"),
+  taskType: text("task_type").default("simple"), // simple, complex, ai_suggested
+  subtasks: jsonb("subtasks"), // for complex tasks
+  dependencies: text("dependencies").array(), // task IDs this task depends on
+  estimatedDuration: integer("estimated_duration"), // AI estimated duration
+  actualDuration: integer("actual_duration"), // actual time spent
+  energyLevel: text("energy_level"), // high, medium, low - for AI scheduling
+  contextSwitchCost: integer("context_switch_cost"), // for AI optimization
+  completedAt: timestamp("completed_at"),
+  postponedCount: integer("postponed_count").default(0), // for AI replanning
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
